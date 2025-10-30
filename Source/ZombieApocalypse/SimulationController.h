@@ -21,7 +21,12 @@ struct FPopulationDensityEffect : public FTableRowBase
 	float NormalPopulationDensity;
 };
 
-
+// Conveyor system for bitten people
+struct ConveyorBatch
+{
+	float amountOfPeople;
+	float remainingDays;
+};
 
 UCLASS()
 class ZOMBIEAPOCALYPSE_API ASimulationController : public AActor
@@ -57,11 +62,33 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
 	float Susceptible{ 100.f };
 	// Zombies = patient_zero
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
 	float Zombies{ 1.f };		
-	// Just to check if we are correctly updating stocks - used in SimulationHUD
+	// Just to check if we are correctly updating stocks - used in SimulationHUD  
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
 	float Bitten{ 0.f };          // s Bitten -> in BittenArraySize
 
+	// ----- CONSTANTS / INITIALIZATION -----
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
+	float days_to_become_infected_from_bite{15.f};
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")  
+	float Bitten_capacity{100.f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
+	float patient_zero{1.0f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
+	float CONVERSION_FROM_PEOPLE_TO_ZOMBIES{1.f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
+	float normal_number_of_bites{1.f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
+	float land_area{1000.f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
+	float normal_population_density{0.1f};
 	
 	// GRAPH points: population_density_effect_on_zombie_bites
 	// Values read in from Unreal DataTable for more flexibility
@@ -78,9 +105,15 @@ public:
 	// Number of time steps completed - to keep track and compare to Stella
 	int TimeStepsFinished{ 0 };
 
+	std::vector<ConveyorBatch> conveyor;
 
+	void RunSimulationStep();
 
 protected:
 	virtual void BeginPlay() override;
+
+private:
+	float conveyor_content();
+	float graph_lookup(float xIn);
 
 };
