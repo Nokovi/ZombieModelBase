@@ -31,15 +31,15 @@ public:
 	/// </summary>
 	/// <param name="DamageInput">How much damage should be imparted.</param>
 	/// <param name="Damager">Reference to projectile owner or projectile itself, could be useful.</param>
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	 void ImpartDamage(float DamageInput, UObject* Damager);
+	UFUNCTION(BlueprintImplementableEvent)
+	void ImpartDamage(float DamageInput, UObject* Damager);
 	//if you for some reason want multiple death types, use the bottom one. otherwise meh.
 	
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent)
 	void ImpartDamageBlueprintEvent(float DamageInput, UObject* Damager); 
 	//^If you want this function to do extra stuff in blueprint (f.ex. visuals), use this.^
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	UFUNCTION(BlueprintImplementableEvent)
 	void CharacterDeath();
 };
