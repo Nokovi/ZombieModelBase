@@ -3,6 +3,7 @@
 
 #include "PopulationMeshActor.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -99,7 +100,7 @@ void APopulationMeshActor::UpdateMeshBasedOnPopulation() {
 	}
 
 	USkeletalMesh* MeshToUse = nullptr;
-	UAnimationBlueprint* AnimBPToUse = nullptr;
+	UAnimBlueprint* AnimBPToUse = nullptr;
 
 	// Switch case for selecting correct Mesh and Animation based on population Type
 	switch (PopulationType) {

@@ -7,7 +7,6 @@
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "SimulationController.h"
-#include "Anim/AnimationBlueprint.h"
 #include "PopulationMeshActor.generated.h"
 
 
@@ -72,10 +71,10 @@ public:
 
 	// Skibidi Animation Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimationBlueprint* SusceptibleAnimBP;
+	class UAnimBlueprint* SusceptibleAnimBP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimationBlueprint* BittenAnimBP;
+	class UAnimBlueprint* BittenAnimBP;
 
 private:
 
