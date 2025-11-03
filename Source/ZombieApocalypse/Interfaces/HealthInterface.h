@@ -44,6 +44,6 @@ private:
 	virtual void ImpartDamageBlueprintEvent(float DamageInput, UObject* Damager); 
 	//^If you want this function to do extra stuff in blueprint (f.ex. visuals), use this.^
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent)
 	virtual void CharacterDeath(char DeathCase);
 };
