@@ -8,9 +8,39 @@
 void IHealthInterface::ImpartDamage(float DamageInput, UObject* Damager)
 {
 	HealthPoints -= DamageInput;
-	ImpartDamageBlueprintEvent();
+	ImpartDamageBlueprintEvent(DamageInput, Damager);
+
+
+	//Destroy actor if health empty.
+	if (HealthPoints <= 0) {
+		CharacterDeath('0');
+	}
 }
 
-void IHealthInterface::ImpartDamageBlueprintEvent()
+
+void IHealthInterface::ImpartDamage(float DamageInput, UObject* Damager, char DeathCase)
 {
+	HealthPoints -= DamageInput;
+	ImpartDamageBlueprintEvent(DamageInput, Damager);
+
+
+	//Destroy actor if health empty.
+	if (HealthPoints <= 0) {
+		CharacterDeath(DeathCase);
+	}
+}
+
+void IHealthInterface::ImpartDamageBlueprintEvent(float DamageInput, UObject* Damager)
+{
+	//no need to write anything here, probably.
+}
+
+void IHealthInterface::CharacterDeath(char DeathCase)
+{
+	switch (DeathCase)
+		case '0': {
+		if (AActor* ThisActor = Cast<AActor>(this)) {
+			ThisActor->Destroy();
+		}
+	}
 }
