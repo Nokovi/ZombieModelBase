@@ -53,7 +53,6 @@ void APopulationMeshActor::BeginPlay()
 	// Setup Mesh
 	SetupMeshComponent();
 	UpdateMeshBasedOnPopulation();
-	UpdateScale();
 }
 
 // Called every frame
@@ -72,7 +71,6 @@ void APopulationMeshActor::Tick(float DeltaTime)
 	if (CurrentPopulationValue != PreviousPopulationValue || PopulationType != PreviousPopulationType) {
 
 		UpdateMeshBasedOnPopulation();
-		UpdateScale();
 
 		PreviousPopulationValue = CurrentPopulationValue;
 		PreviousPopulationType = PopulationType;
@@ -114,6 +112,10 @@ void APopulationMeshActor::UpdateMeshBasedOnPopulation() {
 		MeshToUse = BittenMesh;
 		AnimBPToUse = BittenAnimBP;
 		break;
+
+	case EPopulationType::Zombie:
+		MeshToUse = ZombieMesh;
+		AnimBPToUse = ZombieAnimBP;
 	}
 
 	// Apply Mesh
@@ -126,36 +128,6 @@ void APopulationMeshActor::UpdateMeshBasedOnPopulation() {
 
 			SkeletalMeshComponent->SetAnimInstanceClass(AnimBPToUse->GetAnimBlueprintGeneratedClass());
 		}
-	}
-}
-
-void APopulationMeshActor::UpdateScale() {
-
-	if (!SimulationController) {
-
-		return;
-	}
-
-	float PopulationValue = GetCurrentPopulationValue();
-
-	// Calculate Scale based on Population
-	float BaseScale = 1.0f;
-	float PopulationScale = FMath::Sqrt(PopulationValue / 100.0f);
-	float FinalScale = BaseScale * PopulationScale * ScaleMultiplier;
-
-	// Put scale to balanced Values
-	FinalScale = FMath::Clamp(FinalScale, 0.1f, 10.0f);
-
-	FVector ScaleVector(FinalScale, FinalScale, FinalScale);
-
-	if (bUseSkeletalMesh && SkeletalMeshComponent) {
-
-		SkeletalMeshComponent->SetWorldScale3D(ScaleVector);
-	}
-
-	else if (!bUseSkeletalMesh && StaticMeshComponent) {
-
-		StaticMeshComponent->SetWorldScale3D(ScaleVector);
 	}
 }
 
@@ -174,6 +146,9 @@ float APopulationMeshActor::GetCurrentPopulationValue() const {
 
 		case EPopulationType::Bitten:
 			return SimulationController->Bitten;
+
+		case EPopulationType::Zombie:
+			return SimulationController->Zombies;
 
 		default:
 			return 0.0f;

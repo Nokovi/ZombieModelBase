@@ -14,7 +14,8 @@ UENUM(BlueprintType)
 enum class EPopulationType : uint8 {
 
 	Susceptible UMETA(DisplayName = "Susceptible"),
-	Bitten UMETA(DisplayName = "Bitten")
+	Bitten UMETA(DisplayName = "Bitten"),
+	Zombie UMETA(DisplayName = "Zombie")
 };
 
 UCLASS()
@@ -49,6 +50,9 @@ public:
 	USkeletalMesh* BittenMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Assets")
+	USkeletalMesh* ZombieMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Assets")
 	UStaticMesh* BaseMesh;
 
 	// Skibidi Population Type Settings
@@ -76,10 +80,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimBlueprint* BittenAnimBP;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimBlueprint* ZombieAnimBP;
+
 private:
 
 	void UpdateMeshBasedOnPopulation();
-	void UpdateScale();
 	float GetCurrentPopulationValue() const;
 	void SetupMeshComponent();
 	void FindSimulationController();
