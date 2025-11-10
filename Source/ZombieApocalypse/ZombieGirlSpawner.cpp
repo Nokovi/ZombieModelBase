@@ -6,8 +6,8 @@
 #include "Engine/Engine.h"
 
 // Sets default values
-AZombieGirlSpawner::AZombieGirlSpawner()
-{
+AZombieGirlSpawner::AZombieGirlSpawner() {
+
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -16,25 +16,24 @@ AZombieGirlSpawner::AZombieGirlSpawner()
 }
 
 // Called when the game starts or when spawned
-void AZombieGirlSpawner::BeginPlay()
-{
+void AZombieGirlSpawner::BeginPlay() {
+
 	Super::BeginPlay();
 
-	if (bEnableDebugLogging)
-	{
+	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Warning, TEXT("ZombieGirlSpawner: BeginPlay called"));
 	}
 
-	if (bAutoSpawnOnBeginPlay)
-	{
-		if (bEnableDebugLogging)
-		{
+	if (bAutoSpawnOnBeginPlay) {
+
+		if (bEnableDebugLogging) {
+
 			UE_LOG(LogTemp, Warning, TEXT("ZombieGirlSpawner: Auto-spawning enabled, calling SpawnZombies function"));
 		}
 
 		SpawnZombies();
 	}
-	
 }
 
 // Called every frame
@@ -46,43 +45,43 @@ void AZombieGirlSpawner::Tick(float DeltaTime)
 
 void AZombieGirlSpawner::SpawnZombies()
 {
-	if (bEnableDebugLogging)
-	{
+	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Warning, TEXT("ZombieGirlSpawner: SpawnZombies() called"));
 	}
 
 	// Clear Existing Zombies First
 	ClearSpawnedZombies();
 
-	if (!ZombieActorClass)
-	{
+	if (!ZombieActorClass) {
+
 		UE_LOG(LogTemp, Error, TEXT("ZombieGirlSpawner: No ZombieActorClass set!"));
 		return;
 	}
 
-	if (!ZombieMesh)
-	{
+	if (!ZombieMesh) {
+
 		UE_LOG(LogTemp, Error, TEXT("ZombieGirlSpawner: No ZombieMesh assigned! Please assign a skeletal mesh in the Zombie Assets section."));
 		return;
 	}
 
 	UWorld* World = GetWorld();
 
-	if (!World)
-	{
+	if (!World) {
+
 		UE_LOG(LogTemp, Error, TEXT("ZombieGirlSpawner: No valid world found!"));
 		return;
 	}
 
-	if (bEnableDebugLogging)
-	{
+	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Warning, TEXT("ZombieGirlSpawner: Starting to spawn %d zombies"), NumberToSpawn);
 	}
 
 	// Spawn the specified number of zombies
 	int32 SuccessfulSpawns = 0;
-	for (int32 i = 0; i < NumberToSpawn; i++)
-	{
+	for (int32 i = 0; i < NumberToSpawn; i++) {
+
 		FVector SpawnLocation = CalculateSpawnLocation(i);
 		FRotator SpawnRotation = GetActorRotation();
 
@@ -98,8 +97,8 @@ void AZombieGirlSpawner::SpawnZombies()
 			SpawnParams
 		);
 
-		if (SpawnedZombie)
-		{
+		if (SpawnedZombie) {
+
 			// Configure the spawned zombie
 			ConfigureSpawnedZombie(SpawnedZombie);
 
@@ -107,13 +106,14 @@ void AZombieGirlSpawner::SpawnZombies()
 			SpawnedZombies.Add(SpawnedZombie);
 			SuccessfulSpawns++;
 
-			if (bEnableDebugLogging && (i < 5 || i % 20 == 0))
-			{
+			if (bEnableDebugLogging && (i < 5 || i % 20 == 0)) {
+
 				UE_LOG(LogTemp, Log, TEXT("ZombieGirlSpawner: Successfully spawned zombie %d at location %s"), i, *SpawnLocation.ToString());
 			}
 		}
-		else
-		{
+
+		else {
+
 			UE_LOG(LogTemp, Error, TEXT("ZombieGirlSpawner: Failed to spawn zombie at index %d"), i);
 		}
 	}
@@ -121,8 +121,8 @@ void AZombieGirlSpawner::SpawnZombies()
 	UE_LOG(LogTemp, Warning, TEXT("ZombieGirlSpawner: Successfully spawned %d/%d zombies"), SuccessfulSpawns, NumberToSpawn);
 }
 
-void AZombieGirlSpawner::ConfigureSpawnedZombie(AZombieGirlActor* SpawnedZombie)
-{
+void AZombieGirlSpawner::ConfigureSpawnedZombie(AZombieGirlActor* SpawnedZombie) {
+
 	if (!SpawnedZombie) return;
 
 	// Set population type to Zombie
@@ -130,8 +130,8 @@ void AZombieGirlSpawner::ConfigureSpawnedZombie(AZombieGirlActor* SpawnedZombie)
 
 	// Assign the mesh assets
 	SpawnedZombie->ZombieMesh = ZombieMesh;
-	if (ZombieAnimBP)
-	{
+	if (ZombieAnimBP) {
+
 		SpawnedZombie->ZombieAnimBP = ZombieAnimBP;
 	}
 
@@ -142,55 +142,55 @@ void AZombieGirlSpawner::ConfigureSpawnedZombie(AZombieGirlActor* SpawnedZombie)
 	SpawnedZombie->bAutoFindSimulationController = false;
 
 	// Force mesh setup
-	if (SpawnedZombie->SkeletalMeshComponent && ZombieMesh)
-	{
+	if (SpawnedZombie->SkeletalMeshComponent && ZombieMesh) {
+
 		SpawnedZombie->SkeletalMeshComponent->SetSkeletalMesh(ZombieMesh);
 		SpawnedZombie->SkeletalMeshComponent->SetVisibility(true);
 
-		if (ZombieAnimBP && ZombieAnimBP->GetAnimBlueprintGeneratedClass())
-		{
+		if (ZombieAnimBP && ZombieAnimBP->GetAnimBlueprintGeneratedClass()) {
+
 			SpawnedZombie->SkeletalMeshComponent->SetAnimInstanceClass(ZombieAnimBP->GetAnimBlueprintGeneratedClass());
 		}
 	}
 
 	// Hide static mesh component
-	if (SpawnedZombie->StaticMeshComponent)
-	{
+	if (SpawnedZombie->StaticMeshComponent) {
+
 		SpawnedZombie->StaticMeshComponent->SetVisibility(false);
 	}
 
-	if (bEnableDebugLogging)
-	{
+	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Log, TEXT("ZombieGirlSpawner: Configured zombie with mesh: %s"), ZombieMesh ? *ZombieMesh->GetName() : TEXT("None"));
 	}
 }
 
-void AZombieGirlSpawner::ClearSpawnedZombies()
-{
+void AZombieGirlSpawner::ClearSpawnedZombies() {
+
 	CleanupSpawnedActors();
 }
 
-void AZombieGirlSpawner::CleanupSpawnedActors()
-{
+void AZombieGirlSpawner::CleanupSpawnedActors() {
+
 	// Destroy all previously spawned zombies
-	for (AZombieGirlActor* Zombie : SpawnedZombies)
-	{
-		if (IsValid(Zombie))
-		{
+	for (AZombieGirlActor* Zombie : SpawnedZombies) {
+
+		if (IsValid(Zombie)) {
+
 			Zombie->Destroy();
 		}
 	}
 
 	SpawnedZombies.Empty();
 
-	if (bEnableDebugLogging)
-	{
+	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Log, TEXT("ZombieGirlSpawner: Cleaned up all spawned zombies"));
 	}
 }
 
-FVector AZombieGirlSpawner::CalculateSpawnLocation(int32 Index) const
-{
+FVector AZombieGirlSpawner::CalculateSpawnLocation(int32 Index) const {
+
 	// Calculate grid position
 	int32 Row = Index / ActorsPerRow;
 	int32 Column = Index % ActorsPerRow;

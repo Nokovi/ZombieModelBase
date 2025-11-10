@@ -10,8 +10,8 @@
 #include "ZombieGirlSpawner.generated.h"
 
 UCLASS()
-class ZOMBIEAPOCALYPSE_API AZombieGirlSpawner : public AActor
-{
+class ZOMBIEAPOCALYPSE_API AZombieGirlSpawner : public AActor {
+
 	GENERATED_BODY()
 	
 public:	

@@ -7,8 +7,8 @@
 #include "ZombieGirlActor.generated.h"
 
 UCLASS()
-class ZOMBIEAPOCALYPSE_API AZombieGirlActor : public APopulationMeshActor
-{
+class ZOMBIEAPOCALYPSE_API AZombieGirlActor : public APopulationMeshActor {
+
 	GENERATED_BODY()
 	
 public:

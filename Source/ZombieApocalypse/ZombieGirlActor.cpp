@@ -9,8 +9,8 @@
 #include "Animation/AnimBlueprint.h"
 
 // Sets default values
-AZombieGirlActor::AZombieGirlActor()
-{
+AZombieGirlActor::AZombieGirlActor() {
+
 	// Set this actor to call Tick() every frame
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -31,8 +31,8 @@ AZombieGirlActor::AZombieGirlActor()
 }
 
 // Called when the game starts or when spawned
-void AZombieGirlActor::BeginPlay()
-{
+void AZombieGirlActor::BeginPlay() {
+
 	Super::BeginPlay();
 
 	// Store initial location for wandering
@@ -43,30 +43,30 @@ void AZombieGirlActor::BeginPlay()
 }
 
 // Called every frame
-void AZombieGirlActor::Tick(float DeltaTime)
-{
+void AZombieGirlActor::Tick(float DeltaTime) {
+
 	Super::Tick(DeltaTime);
 
 	// Handle zombie-specific updates
-	if (SimulationController)
-	{
+	if (SimulationController) {
+
 		float CurrentZombieCount = GetZombiePopulation();
 
 		// Update zombie representation when population changes
-		if (CurrentZombieCount != PreviousZombieCount)
-		{
+		if (CurrentZombieCount != PreviousZombieCount) {
+
 			UpdateZombieMesh();
 			PreviousZombieCount = CurrentZombieCount;
 		}
 
 		// Handle wandering behavior
-		if (bShouldWander)
-		{
+		if (bShouldWander) {
+
 			WanderTimer += DeltaTime;
 
 			// Change direction every 2-5 seconds
-			if (WanderTimer >= FMath::RandRange(2.0f, 5.0f))
-			{
+			if (WanderTimer >= FMath::RandRange(2.0f, 5.0f)) {
+
 				WanderDirection = FMath::RandRange(0.0f, 360.0f);
 				WanderTimer = 0.0f;
 			}
@@ -74,6 +74,7 @@ void AZombieGirlActor::Tick(float DeltaTime)
 			// Move in the wander direction
 			FVector CurrentLocation = GetActorLocation();
 			FVector DirectionVector = FVector(
+
 				FMath::Cos(FMath::DegreesToRadians(WanderDirection)),
 				FMath::Sin(FMath::DegreesToRadians(WanderDirection)),
 				0.0f
@@ -81,8 +82,8 @@ void AZombieGirlActor::Tick(float DeltaTime)
 
 			// Check if we're still within wander radius
 			float DistanceFromStart = FVector::Dist2D(CurrentLocation, InitialLocation);
-			if (DistanceFromStart > WanderRadius)
-			{
+			if (DistanceFromStart > WanderRadius) {
+
 				// Turn back toward initial position
 				DirectionVector = (InitialLocation - CurrentLocation).GetSafeNormal();
 			}
@@ -98,28 +99,28 @@ void AZombieGirlActor::Tick(float DeltaTime)
 	}
 }
 
-void AZombieGirlActor::SetupZombieComponents()
-{
+void AZombieGirlActor::SetupZombieComponents() {
+
 	// Configure zombie mesh
 	UpdateZombieMesh();
 
 	// Apply zombie visual effects
-	if (bEnableZombieEffects && SkeletalMeshComponent)
-	{
+	if (bEnableZombieEffects && SkeletalMeshComponent) {
+
 		// Create dynamic material instance for zombie tint
-		if (UMaterialInterface* CurrentMaterial = SkeletalMeshComponent->GetMaterial(0))
-		{
+		if (UMaterialInterface* CurrentMaterial = SkeletalMeshComponent->GetMaterial(0)) {
+
 			UMaterialInstanceDynamic* DynamicMaterial = SkeletalMeshComponent->CreateAndSetMaterialInstanceDynamic(0);
-			if (DynamicMaterial)
-			{
+			if (DynamicMaterial) {
+
 				DynamicMaterial->SetVectorParameterValue(TEXT("TintColor"), ZombieTint);
 			}
 		}
 	}
 }
 
-void AZombieGirlActor::UpdateZombieMesh()
-{
+void AZombieGirlActor::UpdateZombieMesh() {
+
 	if (!SkeletalMeshComponent)
 		return;
 
@@ -127,27 +128,27 @@ void AZombieGirlActor::UpdateZombieMesh()
 	USkeletalMesh* MeshToUse = ZombieMesh ? ZombieMesh : BittenMesh;
 	UAnimBlueprint* AnimToUse = ZombieAnimBP ? ZombieAnimBP : BittenAnimBP;
 
-	if (MeshToUse)
-	{
+	if (MeshToUse) {
+
 		SkeletalMeshComponent->SetSkeletalMesh(MeshToUse);
 		SkeletalMeshComponent->SetVisibility(true);
 
 		// Apply zombie animation
-		if (AnimToUse && AnimToUse->GetAnimBlueprintGeneratedClass())
-		{
+		if (AnimToUse && AnimToUse->GetAnimBlueprintGeneratedClass()) {
+
 			SkeletalMeshComponent->SetAnimInstanceClass(AnimToUse->GetAnimBlueprintGeneratedClass());
 		}
 	}
 
 	// Hide static mesh component since we're using skeletal mesh
-	if (StaticMeshComponent)
-	{
+	if (StaticMeshComponent) {
+
 		StaticMeshComponent->SetVisibility(false);
 	}
 }
 
-float AZombieGirlActor::GetZombiePopulation() const
-{
+float AZombieGirlActor::GetZombiePopulation() const {
+
 	if (!SimulationController)
 		return 0.0f;
 

@@ -34,6 +34,11 @@ APopulationMeshActor::APopulationMeshActor() {
 	PreviousPopulationValue = 0.0f;
 	PreviousPopulationType = EPopulationType::Susceptible;
 
+	// Bite Management System Defaults
+	bIsBitten = false;
+	BittenTimestamp = -1.0f;
+	bCanBeBitten = true;
+
 	// Hides Static Mesh if Skeletal Mesh is used
 	StaticMeshComponent->SetVisibility(!bUseSkeletalMesh);
 	SkeletalMeshComponent->SetVisibility(bUseSkeletalMesh);
@@ -64,6 +69,11 @@ void APopulationMeshActor::Tick(float DeltaTime)
 	if (!SimulationController) {
 
 		return;
+	}
+
+	if (bIsBitten && PopulationType != EPopulationType::Zombie) {
+
+		CheckForTransformation();
 	}
 
 	// Checks if Population values/type has changed

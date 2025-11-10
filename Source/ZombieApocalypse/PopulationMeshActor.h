@@ -83,6 +83,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimBlueprint* ZombieAnimBP;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Bite Management System")
+	bool bIsBitten = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Bite Management System")
+	float BittenTimestamp = -1, 0f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Bite Management System")
+	bool bCanBeBitten = true;
+
+	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
+	bool CanBeBitten() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
+	void GetBitten(float CurrentSimulationTime);
+
+	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
+	bool ShouldTransformToZombie(float CurrentSimulationTime) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
+	void TransformToZombie();
+
+	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
+	bool IsValidBiteTarget() const;
+
 private:
 
 	void UpdateMeshBasedOnPopulation();
@@ -93,4 +117,6 @@ private:
 	// Detecting changes
 	float PreviousPopulationValue;
 	EPopulationType PreviousPopulationType;
+
+	void CheckForTransformation();
 };
