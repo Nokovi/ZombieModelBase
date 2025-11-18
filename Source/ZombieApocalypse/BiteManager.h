@@ -19,6 +19,9 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	float BiteTime;
 
+	UPROPERTY(BlueprintReadWrite)
+	int32 ScheduledTransformationDay;
+
 	FBiteRecord() {
 
 		BittenActor = nullptr;
@@ -60,6 +63,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation")
 	ASimulationController* SimulationController;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Integration")
+	bool bSyncWithSimulationController = true;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Integration")
+	float SimulationControllerBittenRatio = 0.0f; // Track what % of bitten population should transform
+
 	// Bite management functions
 	UFUNCTION(BlueprintCallable, Category = "Bite Management")
 	void RegisterBite(APopulationMeshActor* BittenActor, float BiteTime);
@@ -75,6 +84,19 @@ private:
 	UPROPERTY()
 	TArray<FBiteRecord> ActiveBites;
 
+	int32 NextAvailableTransformationDay = 15;
+
 	void FindSimulationController();
 	void CleanupInvalidBites();
+
+	void SchedulePendingTransformations();
+
+	// Track previous simulation bitten count for transformation detection
+	float LastKnownSimulationBitten = 0.0f;
+
+	// Helper methods
+	void TransformOldestScheduledActors(int32 ActorsToTransform, int32 CurrentDay);
+	void CheckForIndividualTransformations(int32 CurrentDay);
+
 };
+
