@@ -7,6 +7,8 @@
 #include "Materials/MaterialParameterCollection.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Animation/AnimBlueprint.h"
+#include "EngineUtils.h"
+#include "Engine/Engine.h"
 
 // Sets default values
 AZombieGirlActor::AZombieGirlActor() {
@@ -25,9 +27,17 @@ AZombieGirlActor::AZombieGirlActor() {
 	bEnableZombieEffects = true;
 	ZombieTint = FLinearColor(0.8f, 1.0f, 0.8f, 1.0f);
 
+	// Biting Behavior Defaults
+	BiteRange = 100.0f;
+	BiteCooldown = 2.0f;
+	bEnableBiting = true;
+	BiteSearchRadius = 300.0f;
+
 	// Initialize timers
 	WanderTimer = 0.0f;
 	WanderDirection = FMath::RandRange(0.0f, 360.0f);
+	LastBiteTime = 0.0f;
+	CurrentTarget = nullptr;
 }
 
 // Called when the game starts or when spawned
@@ -59,8 +69,14 @@ void AZombieGirlActor::Tick(float DeltaTime) {
 			PreviousZombieCount = CurrentZombieCount;
 		}
 
+		// Handle biting behavior
+		if (bEnableBiting) {
+
+			HandleBitingBehavior(DeltaTime);
+		}
+
 		// Handle wandering behavior
-		if (bShouldWander) {
+		if (bShouldWander && !CurrentTarget) {
 
 			WanderTimer += DeltaTime;
 
@@ -154,4 +170,139 @@ float AZombieGirlActor::GetZombiePopulation() const {
 
 	return SimulationController->Zombies;
 }
+
+void AZombieGirlActor::HandleBitingBehavior(float DeltaTime) {
+
+	if (!SimulationController)
+		return;
+
+	LastBiteTime += DeltaTime;
+
+	if (LastBiteTime < BiteCooldown)
+		return;
+
+	// Find a target if we don't have one
+	if (!CurrentTarget || !IsValid(CurrentTarget) || !CurrentTarget->IsValidBiteTarget()) {
+
+		CurrentTarget = FindNearestBiteTarget();
+	}
+
+	// If we have a valid target
+	if (CurrentTarget) {
+
+		FVector TargetLocation = CurrentTarget->GetActorLocation();
+		FVector MyLocation = GetActorLocation();
+		float DistanceToTarget = FVector::Dist2D(MyLocation, TargetLocation);
+
+		// Move toward target if not in bite range
+		if (DistanceToTarget > BiteRange) {
+
+			FVector DirectionToTarget = (TargetLocation - MyLocation).GetSafeNormal();
+			FVector NewLocation = MyLocation + (DirectionToTarget * MovementSpeed * DeltaTime);
+			SetActorLocation(NewLocation);
+
+			// Face the target
+			FRotator NewRotation = DirectionToTarget.Rotation();
+			SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
+		}
+
+		else {
+
+			// We're in range, attempt to bite
+			TryToBiteNearbyTargets();
+		}
+	}
+}
+
+void AZombieGirlActor::TryToBiteNearbyTargets() {
+
+	if (!SimulationController)
+		return;
+
+	// Check cooldown
+	if (LastBiteTime < BiteCooldown)
+		return;
+
+	// Find all potential targets in bite range
+	UWorld* World = GetWorld();
+	if (!World)
+		return;
+
+	FVector MyLocation = GetActorLocation();
+
+	for (TActorIterator<APopulationMeshActor> ActorIterator(World); ActorIterator; ++ActorIterator) {
+
+		APopulationMeshActor* PotentialTarget = *ActorIterator;
+
+		if (!PotentialTarget || PotentialTarget == this)
+			continue;
+
+		if (!CanBiteTarget(PotentialTarget))
+			continue;
+
+		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
+
+		if (Distance <= BiteRange) {
+
+			// Get current simulation time
+			float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+
+			// Bite the target
+			PotentialTarget->GetBitten(CurrentSimulationTime);
+
+			// Reset bite timer
+			LastBiteTime = 0.0f;
+
+			// Clear current target so we can find a new one
+			CurrentTarget = nullptr;
+
+			UE_LOG(LogTemp, Warning, TEXT("ZombieGirlActor: %s bit %s at simulation time %f"),
+				*GetName(), *PotentialTarget->GetName(), CurrentSimulationTime);
+
+			// Only bite one target per attempt
+			break;
+		}
+	}
+}
+
+APopulationMeshActor* AZombieGirlActor::FindNearestBiteTarget() {
+
+	UWorld* World = GetWorld();
+	if (!World)
+		return nullptr;
+
+	FVector MyLocation = GetActorLocation();
+	APopulationMeshActor* NearestTarget = nullptr;
+	float NearestDistance = BiteSearchRadius;
+
+	for (TActorIterator<APopulationMeshActor> ActorIterator(World); ActorIterator; ++ActorIterator){
+
+		APopulationMeshActor* PotentialTarget = *ActorIterator;
+
+		if (!PotentialTarget || PotentialTarget == this)
+			continue;
+
+		if (!CanBiteTarget(PotentialTarget))
+			continue;
+
+		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
+
+		if (Distance < NearestDistance) {
+
+			NearestDistance = Distance;
+			NearestTarget = PotentialTarget;
+		}
+	}
+
+	return NearestTarget;
+}
+
+bool AZombieGirlActor::CanBiteTarget(APopulationMeshActor* Target) const {
+
+	if (!Target)
+		return false;
+
+	return Target->IsValidBiteTarget();
+}
+
 

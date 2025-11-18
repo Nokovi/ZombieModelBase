@@ -87,7 +87,7 @@ public:
 	bool bIsBitten = false;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Bite Management System")
-	float BittenTimestamp = -1, 0f;
+	float BittenTimestamp = -1.0f;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Bite Management System")
 	bool bCanBeBitten = true;

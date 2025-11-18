@@ -126,6 +126,7 @@ void APopulationMeshActor::UpdateMeshBasedOnPopulation() {
 	case EPopulationType::Zombie:
 		MeshToUse = ZombieMesh;
 		AnimBPToUse = ZombieAnimBP;
+		break;
 	}
 
 	// Apply Mesh
@@ -180,6 +181,65 @@ void APopulationMeshActor::FindSimulationController() {
 
 			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Could Not Find Simulation Controller"));
 		}
+	}
+}
+
+bool APopulationMeshActor::CanBeBitten() const {
+
+	return bCanBeBitten && !bIsBitten && PopulationType == EPopulationType::Susceptible;
+}
+
+void APopulationMeshActor::GetBitten(float CurrentSimulationTime) {
+
+	if (!CanBeBitten())
+		return;
+
+	bIsBitten = true;
+	BittenTimestamp = CurrentSimulationTime;
+	bCanBeBitten = false;
+
+	PopulationType = EPopulationType::Bitten;
+	UpdateMeshBasedOnPopulation();
+
+	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been bitten at siumlation time %f "),
+		* GetName(), CurrentSimulationTime);
+}
+
+bool APopulationMeshActor::ShouldTransformToZombie(float CurrentSimulationTime) const {
+
+	if (!bIsBitten || BittenTimestamp < 0.0f)
+		return false;
+
+	float DaysSinceBite = CurrentSimulationTime - BittenTimestamp;
+	return DaysSinceBite >= 15.0f;
+}
+
+void APopulationMeshActor::TransformToZombie() {
+
+	if (PopulationType == EPopulationType::Zombie)
+		return;
+
+	PopulationType = EPopulationType::Zombie;
+	UpdateMeshBasedOnPopulation();
+
+	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor % s has been transformed into a zombie"), *GetName());
+}
+
+bool APopulationMeshActor::IsValidBiteTarget() const {
+
+	return PopulationType == EPopulationType::Susceptible && CanBeBitten();
+}
+
+void APopulationMeshActor::CheckForTransformation() {
+
+	if (!SimulationController)
+		return;
+
+	float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+
+	if (ShouldTransformToZombie(CurrentSimulationTime)) {
+
+		TransformToZombie();
 	}
 }
 
