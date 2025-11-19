@@ -4,6 +4,7 @@
 #include "PopulationMeshActor.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimBlueprint.h"
+#include "Engine/World.h"
 #include "ZombieGirlActor.generated.h"
 
 UCLASS()
@@ -23,19 +24,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
-	// Zombie behavior settings
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
-	float MovementSpeed = 50.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
-	float AttackRange = 100.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
-	bool bShouldWander = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
-	float WanderRadius = 500.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bite Behavior")
 	float BiteRange = 100.0f;
@@ -70,6 +58,14 @@ private:
 	float GetZombiePopulation() const;
 	void SetupZombieComponents();
 	void HandleBitingBehavior(float DeltaTime);
+	void HandleWanderingMovement(float DeltaTime);
+	void HandleTargetedMovement(float DeltaTime);
+
+	// Movement boundary helpers
+	void CalculateWorldBoundaries();
+	FVector GetBoundaryAvoidanceDirection(const FVector& CurrentLocation, const FVector& CurrentDirection);
+	bool IsNearBoundary(const FVector& Location, float Buffer = 0.0f) const;
+	void DrawDebugBoundaries() const;
 
 	// Zombie-specific tracking
 	float PreviousZombieCount = 0.0f;
@@ -79,4 +75,16 @@ private:
 
 	float LastBiteTime = 0.0f;
 	APopulationMeshActor* CurrentTarget = nullptr;
+
+	// Movement boundaries
+	FVector WorldBoundaryMin;
+	FVector WorldBoundaryMax;
+	bool bHasValidBoundaries = false;
+
+	// Movement state
+	FVector LastValidPosition;
+	float DirectionChangeTimer = 0.0f;
+	bool bTurningAroundFromBoundary = false;
+	float BoundaryTurnTimer = 0.0f;
 };
+
