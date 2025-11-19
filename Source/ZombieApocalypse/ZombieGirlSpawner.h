@@ -48,7 +48,7 @@ public:
 
 	// Actor Class
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
-	TSubclassOf<AZombieGirlActor> ZombieActorClass;
+	TSubclassOf<AZombieGirlActor> ZombieGirlActorClass;
 
 	// Debug Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")

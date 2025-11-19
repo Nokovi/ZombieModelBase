@@ -12,7 +12,7 @@ AZombieGirlSpawner::AZombieGirlSpawner() {
 	PrimaryActorTick.bCanEverTick = false;
 
 	// Set Default Zombie Actor Class
-	ZombieActorClass = AZombieGirlActor::StaticClass();
+	ZombieGirlActorClass = AZombieGirlActor::StaticClass();
 }
 
 // Called when the game starts or when spawned
@@ -53,7 +53,7 @@ void AZombieGirlSpawner::SpawnZombies()
 	// Clear Existing Zombies First
 	ClearSpawnedZombies();
 
-	if (!ZombieActorClass) {
+	if (!ZombieGirlActorClass) {
 
 		UE_LOG(LogTemp, Error, TEXT("ZombieGirlSpawner: No ZombieActorClass set!"));
 		return;
@@ -91,7 +91,7 @@ void AZombieGirlSpawner::SpawnZombies()
 
 		AZombieGirlActor* SpawnedZombie = World->SpawnActor<AZombieGirlActor>(
 
-			ZombieActorClass,
+			ZombieGirlActorClass,
 			SpawnLocation,
 			SpawnRotation,
 			SpawnParams

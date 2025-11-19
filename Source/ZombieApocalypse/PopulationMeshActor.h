@@ -4,8 +4,10 @@
 #include "GameFramework/Actor.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Animation/AnimBlueprint.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
 #include "SimulationController.h"
 #include "PopulationMeshActor.generated.h"
 
@@ -83,6 +85,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimBlueprint* ZombieAnimBP;
 
+	// Zombie behavior settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	float MovementSpeed = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	float AttackRange = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	bool bShouldWander = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	float WanderRadius = 500.0f;
+
+	// Movement boundary settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Boundaries")
+	bool bUseCustomBoundaries = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Boundaries", meta = (EditCondition = "bUseCustomBoundaries"))
+	FVector CustomBoundaryMin = FVector(-5000.0f, -5000.0f, -1000.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Boundaries", meta = (EditCondition = "bUseCustomBoundaries"))
+	FVector CustomBoundaryMax = FVector(5000.0f, 5000.0f, 1000.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Boundaries")
+	float BoundaryBuffer = 200.0f; // Distance from boundary before turning around
+
+	// Debug settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+	bool bDrawDebugBoundaries = false;
+
 	UPROPERTY(BlueprintReadWrite, Category = "Bite Management System")
 	bool bIsBitten = false;
 
@@ -107,12 +139,46 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
 	bool IsValidBiteTarget() const;
 
+	// Movement boundary functions
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	FVector GetMovementBoundaries(bool& bOutMinBoundary, FVector& OutMin, FVector& OutMax);
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	bool IsWithinBoundaries(const FVector& Location) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	FVector ClampToBoundaries(const FVector& Location) const;
+
 private:
 
 	void UpdateMeshBasedOnPopulation();
 	float GetCurrentPopulationValue() const;
 	void SetupMeshComponent();
 	void FindSimulationController();
+	void GirlsHandleWanderingMovement(float DeltaTime);
+
+	// Movement boundary helpers
+	void CalculateWorldBoundaries();
+	FVector GetBoundaryAvoidanceDirection(const FVector& CurrentLocation, const FVector& CurrentDirection);
+	bool IsNearBoundary(const FVector& Location, float Buffer = 0.0f) const;
+	void DrawDebugBoundaries() const;
+
+	FVector InitialLocation;
+	float WanderTimer = 0.0f;
+	float WanderDirection = 0.0f;
+
+	APopulationMeshActor* CurrentTarget = nullptr;
+
+	// Movement boundaries
+	FVector WorldBoundaryMin;
+	FVector WorldBoundaryMax;
+	bool bHasValidBoundaries = false;
+
+	// Movement state
+	FVector LastValidPosition;
+	float DirectionChangeTimer = 0.0f;
+	bool bTurningAroundFromBoundary = false;
+	float BoundaryTurnTimer = 0.0f;
 
 	// Detecting changes
 	float PreviousPopulationValue;
