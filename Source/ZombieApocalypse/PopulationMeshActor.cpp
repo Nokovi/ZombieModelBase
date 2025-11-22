@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Animation/AnimBlueprint.h"
 
 // Sets default values
@@ -29,6 +30,13 @@ APopulationMeshActor::APopulationMeshActor() {
 	// Create Static Mesh Component
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment(RootComponent);
+	
+
+	//Create capsule collision
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+	CapsuleComponent->SetupAttachment(RootComponent);
+	CapsuleComponent->SetCapsuleSize(50.f, 180.f, true);
+	CapsuleComponent->SetGenerateOverlapEvents(true);
 
 	// Skibidi Default Values
 	PopulationType = EPopulationType::Susceptible;
@@ -452,4 +460,9 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 	// Rotate to face movement direction
 	FRotator NewRotation = DirectionVector.Rotation();
 	SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
+}
+
+
+void APopulationMeshActor::OnDeath() const {
+	//Update population so it recognizes their deaths.
 }
