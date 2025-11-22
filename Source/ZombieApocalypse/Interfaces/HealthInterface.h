@@ -23,7 +23,7 @@ class ZOMBIEAPOCALYPSE_API IHealthInterface
 public:
 	GENERATED_BODY()
 
-	float HealthPoints = 100;
+	float HealthPoints = 100.f;
 
 
 	/// <summary>
@@ -33,6 +33,7 @@ public:
 	/// <param name="Damager">Reference to projectile owner or projectile itself, could be useful.</param>
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	 void ImpartDamage(float DamageInput, UObject* Damager);
+	 virtual void ImpartDamage_Implementation(float DamageInput, UObject* Damager);
 	//if you for some reason want multiple death types, use the bottom one. otherwise meh.
 	
 
@@ -42,4 +43,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void CharacterDeath();
+	virtual void CharacterDeath_Implementation();
+
+	
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	float GetHealthPoints();
+	float GetHealthPoints_Implementation();
+
+	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	void SetHealthPoints(float HP);
+	void SetHealthPoints_Implementation(float HP);
 };
