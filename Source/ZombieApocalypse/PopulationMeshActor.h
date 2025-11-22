@@ -4,10 +4,12 @@
 #include "GameFramework/Actor.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Animation/AnimBlueprint.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "interfaces/HealthInterface.h"
 #include "SimulationController.h"
 #include "PopulationMeshActor.generated.h"
 
@@ -21,7 +23,7 @@ enum class EPopulationType : uint8 {
 };
 
 UCLASS()
-class ZOMBIEAPOCALYPSE_API APopulationMeshActor : public AActor
+class ZOMBIEAPOCALYPSE_API APopulationMeshActor : public AActor, public IHealthInterface
 {
 	GENERATED_BODY()
 	
@@ -43,6 +45,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components)
 	UStaticMeshComponent* StaticMeshComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Components)
+	UCapsuleComponent* CapsuleComponent;
+
+
 
 	// Skibidi Meshes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Assets")
@@ -149,6 +156,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	FVector ClampToBoundaries(const FVector& Location) const;
 
+
+	void OnDeath() const;
+
 private:
 
 	void UpdateMeshBasedOnPopulation();
@@ -156,6 +166,7 @@ private:
 	void SetupMeshComponent();
 	void FindSimulationController();
 	void GirlsHandleWanderingMovement(float DeltaTime);
+
 
 	// Movement boundary helpers
 	void CalculateWorldBoundaries();

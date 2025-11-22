@@ -2,7 +2,7 @@
 
 
 #include "HealthInterface.h"
-
+#include "../PopulationMeshActor.h"
 
 
 // Add default functionality here for any IHealthInterface functions that are not pure virtual.
@@ -21,6 +21,9 @@ void IHealthInterface::ImpartDamage_Implementation(float DamageInput, UObject* D
 
 void IHealthInterface::CharacterDeath_Implementation()
 {
+	if (APopulationMeshActor* ThisPopulationMeshActor = Cast<APopulationMeshActor>(this)) {
+		ThisPopulationMeshActor->OnDeath();
+	}
 	if (AActor* ThisActor = Cast<AActor>(this)) {
 		ThisActor->Destroy();
 		GEngine->AddOnScreenDebugMessage(1, 2.0f, FColor::Red, FString::Printf(TEXT("Died!")), true);
