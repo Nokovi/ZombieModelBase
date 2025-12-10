@@ -111,6 +111,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
 	float BiteSearchRadius = 300.0f;
 
+	// NEW: Zombie Teleportation Settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	float TeleportInterval = 1.0f; // Teleport every second
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	float TeleportRange = 150.0f; // How close to teleport near the target
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	bool bEnableTeleportation = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	bool bEnableDebugTeleport = false;
+
 	// Movement boundary settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Boundaries")
 	bool bUseCustomBoundaries = false;
@@ -162,6 +175,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	bool CanBiteTarget(APopulationMeshActor* Target) const;
 
+	// NEW: Zombie Teleportation Functions
+	UFUNCTION(BlueprintCallable, Category = "Zombie Teleportation")
+	APopulationMeshActor* FindRandomBiteTarget();
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie Teleportation")
+	void TeleportToTarget(APopulationMeshActor* Target);
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie Teleportation")
+	void AttemptBiteAfterTeleport(APopulationMeshActor* Target);
+
 	// Movement boundary functions
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	FVector GetMovementBoundaries(bool& bOutMinBoundary, FVector& OutMin, FVector& OutMax);
@@ -184,6 +207,9 @@ private:
 	void HandleZombieBitingBehavior(float DeltaTime);
 	void HandleZombieTargetedMovement(float DeltaTime);
 
+	// NEW: Zombie teleportation behavior
+	void HandleZombieTeleportation(float DeltaTime);
+
 	// Movement boundary helpers
 	void CalculateWorldBoundaries();
 	FVector GetBoundaryAvoidanceDirection(const FVector& CurrentLocation, const FVector& CurrentDirection);
@@ -198,6 +224,9 @@ private:
 
 	// NEW: Zombie biting tracking
 	float LastBiteTime = 0.0f;
+
+	// NEW: Zombie teleportation tracking
+	float TeleportTimer = 0.0f;
 
 	// Movement boundaries
 	FVector WorldBoundaryMin;

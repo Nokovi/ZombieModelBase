@@ -31,18 +31,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
 	FLinearColor ZombieTint = FLinearColor(0.8f, 1.0f, 0.8f, 1.0f);
 
-	// NEW: Teleportation settings
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
-	float TeleportInterval = 1.0f; // Teleport every second
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
-	float TeleportRange = 150.0f; // How close to teleport near the target
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
-	bool bEnableTeleportation = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
-	bool bEnableDebugTeleport = true;
 
 private:
 	void UpdateZombieMesh();

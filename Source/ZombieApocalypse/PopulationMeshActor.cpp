@@ -50,6 +50,13 @@ APopulationMeshActor::APopulationMeshActor() {
 	BiteSearchRadius = 300.0f;
 	LastBiteTime = 0.0f;
 
+	// NEW: Zombie Teleportation Defaults
+	TeleportInterval = 1.0f;
+	TeleportRange = 150.0f;
+	bEnableTeleportation = true;
+	bEnableDebugTeleport = false;
+	TeleportTimer = 0.0f;
+
 	// Hides Static Mesh if Skeletal Mesh is used
 	StaticMeshComponent->SetVisibility(!bUseSkeletalMesh);
 	SkeletalMeshComponent->SetVisibility(bUseSkeletalMesh);
@@ -159,7 +166,7 @@ void APopulationMeshActor::CalculateWorldBoundaries() {
 
 	bHasValidBoundaries = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("ZombieGirlActor: Calculated boundaries - Min: %s, Max: %s"),
+	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Calculated boundaries - Min: %s, Max: %s"),
 		*WorldBoundaryMin.ToString(), *WorldBoundaryMax.ToString());
 }
 
@@ -267,19 +274,27 @@ void APopulationMeshActor::Tick(float DeltaTime)
 		PreviousPopulationType = PopulationType;
 	}
 
-	// NEW: Handle zombie biting behavior
-	if (PopulationType == EPopulationType::Zombie && bEnableBiting) {
-		HandleZombieBitingBehavior(DeltaTime);
+	// NEW: Handle zombie behavior - choose between teleportation or traditional movement/biting
+	if (PopulationType == EPopulationType::Zombie) {
+		if (bEnableTeleportation) {
+			// Use teleportation behavior like ZombieGirlActor
+			HandleZombieTeleportation(DeltaTime);
+		}
+		else if (bEnableBiting) {
+			// Use traditional zombie biting behavior
+			HandleZombieBitingBehavior(DeltaTime);
+		}
 	}
 
-	// Handle movement behavior
-	if (bShouldWander) {
-		if (PopulationType == EPopulationType::Zombie && CurrentTarget && IsValid(CurrentTarget)) {
-			HandleZombieTargetedMovement(DeltaTime);
-		}
-		else {
-			GirlsHandleWanderingMovement(DeltaTime);
-		}
+	// Handle movement behavior for non-zombie types or zombies without teleportation
+	if (bShouldWander && PopulationType != EPopulationType::Zombie) {
+		GirlsHandleWanderingMovement(DeltaTime);
+	}
+	else if (PopulationType == EPopulationType::Zombie && !bEnableTeleportation && CurrentTarget && IsValid(CurrentTarget)) {
+		HandleZombieTargetedMovement(DeltaTime);
+	}
+	else if (PopulationType == EPopulationType::Zombie && !bEnableTeleportation && bShouldWander) {
+		GirlsHandleWanderingMovement(DeltaTime);
 	}
 }
 
@@ -346,7 +361,7 @@ float APopulationMeshActor::GetCurrentPopulationValue() const {
 	}
 
 	// Switch Case for returning Correct Stock based on Population Type
-	switch (PopulationType) {
+switch (PopulationType) {
 
 		case EPopulationType::Susceptible:
 			return SimulationController->Susceptible;
@@ -397,7 +412,7 @@ void APopulationMeshActor::GetBitten(float CurrentSimulationTime) {
 	PopulationType = EPopulationType::Bitten;
 	UpdateMeshBasedOnPopulation();
 
-	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been bitten at siumlation time %f "),
+	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been bitten at simulation time %f "),
 		* GetName(), CurrentSimulationTime);
 }
 
@@ -418,7 +433,15 @@ void APopulationMeshActor::TransformToZombie() {
 	PopulationType = EPopulationType::Zombie;
 	UpdateMeshBasedOnPopulation();
 
-	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been transformed into a zombie"), *GetName());
+	// NEW: Reset teleportation timer when transforming to zombie
+	TeleportTimer = 0.0f;
+
+	// NEW: Disable regular wandering for zombies, they use teleportation instead
+	if (bEnableTeleportation) {
+		bShouldWander = false;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been transformed into a zombie and will now teleport"), *GetName());
 }
 
 bool APopulationMeshActor::IsValidBiteTarget() const {
@@ -439,7 +462,140 @@ void APopulationMeshActor::CheckForTransformation() {
 	}
 }
 
-// NEW: Zombie biting behavior methods
+// NEW: Zombie teleportation behavior methods (copied from ZombieGirlActor)
+void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
+
+	if (!SimulationController || PopulationType != EPopulationType::Zombie)
+		return;
+
+	// Update teleport timer
+	TeleportTimer += DeltaTime;
+	LastBiteTime += DeltaTime;
+
+	// Check if it's time to teleport
+	if (TeleportTimer >= TeleportInterval) {
+
+		// Find a random girl to teleport to
+		APopulationMeshActor* RandomTarget = FindRandomBiteTarget();
+		
+		if (RandomTarget) {
+			
+			// Teleport to the target
+			TeleportToTarget(RandomTarget);
+			
+			// Attempt to bite after teleporting
+			AttemptBiteAfterTeleport(RandomTarget);
+			
+			if (bEnableDebugTeleport) {
+				UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s teleported to bite target %s"), 
+					*GetName(), *RandomTarget->GetName());
+			}
+		}
+		else {
+			if (bEnableDebugTeleport) {
+				UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s could not find any bite targets"), *GetName());
+			}
+		}
+
+		// Reset teleport timer
+		TeleportTimer = 0.0f;
+	}
+}
+
+APopulationMeshActor* APopulationMeshActor::FindRandomBiteTarget() {
+
+	UWorld* World = GetWorld();
+	if (!World)
+		return nullptr;
+
+	// Collect all valid bite targets
+	TArray<APopulationMeshActor*> ValidTargets;
+
+	for (TActorIterator<APopulationMeshActor> ActorIterator(World); ActorIterator; ++ActorIterator) {
+
+		APopulationMeshActor* PotentialTarget = *ActorIterator;
+
+		if (!PotentialTarget || PotentialTarget == this)
+			continue;
+
+		// Check if this is a valid bite target (susceptible girls)
+		if (PotentialTarget->IsValidBiteTarget()) {
+			ValidTargets.Add(PotentialTarget);
+		}
+	}
+
+	// Return a random target from valid targets
+	if (ValidTargets.Num() > 0) {
+		int32 RandomIndex = FMath::RandRange(0, ValidTargets.Num() - 1);
+		return ValidTargets[RandomIndex];
+	}
+
+	return nullptr;
+}
+
+void APopulationMeshActor::TeleportToTarget(APopulationMeshActor* Target) {
+
+	if (!Target)
+		return;
+
+	// Get target's location
+	FVector TargetLocation = Target->GetActorLocation();
+	
+	// Calculate a random position near the target (within teleport range)
+	float RandomAngle = FMath::RandRange(0.0f, 360.0f);
+	float RandomDistance = FMath::RandRange(BiteRange * 0.5f, TeleportRange);
+	
+	FVector OffsetDirection = FVector(
+		FMath::Cos(FMath::DegreesToRadians(RandomAngle)),
+		FMath::Sin(FMath::DegreesToRadians(RandomAngle)),
+		0.0f
+	);
+	
+	FVector TeleportLocation = TargetLocation + (OffsetDirection * RandomDistance);
+	
+	// Teleport to the calculated position
+	SetActorLocation(TeleportLocation);
+	
+	// Face the target
+	FVector DirectionToTarget = (TargetLocation - TeleportLocation).GetSafeNormal();
+	FRotator NewRotation = DirectionToTarget.Rotation();
+	SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
+}
+
+void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target) {
+
+	if (!Target || !SimulationController)
+		return;
+
+	// Check bite cooldown
+	if (LastBiteTime < BiteCooldown)
+		return;
+
+	// Check if target is still valid and in range after teleportation
+	if (!Target->IsValidBiteTarget())
+		return;
+
+	float DistanceToTarget = FVector::Dist2D(GetActorLocation(), Target->GetActorLocation());
+	
+	if (DistanceToTarget <= BiteRange) {
+
+		// Get current simulation time
+		float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+
+		// Bite the target
+		Target->GetBitten(CurrentSimulationTime);
+
+		// Reset bite timer
+		LastBiteTime = 0.0f;
+
+		if (bEnableDebugTeleport) {
+			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s successfully bit %s after teleportation at simulation time %f"),
+				*GetName(), *Target->GetName(), CurrentSimulationTime);
+		}
+	}
+}
+
+// Original zombie biting behavior methods (for when teleportation is disabled)
 void APopulationMeshActor::HandleZombieBitingBehavior(float DeltaTime) {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
