@@ -64,12 +64,17 @@ APopulationMeshActor::APopulationMeshActor() {
 	MovementSpeed = 250.0f;
 	AttackRange = 75.0f;
 	bShouldWander = true;
-	WanderRadius = 50000.0f; // Greatly increased wander radius for free movement
+	WanderRadius = 2000.0f; // Reduced from 50000.0f to reasonable size
 
-	// Disable boundary restrictions for free movement
-	BoundaryBuffer = 0.0f;
-	bUseCustomBoundaries = false;
-	bHasValidBoundaries = false; // Disable boundary system entirely
+	// ENABLE boundary restrictions to keep girls within level
+	BoundaryBuffer = 200.0f; // Distance from edge before turning around
+	bUseCustomBoundaries = true; // Enable custom boundaries
+	
+	// Set reasonable default boundaries (adjust these values for your level)
+	CustomBoundaryMin = FVector(-2500.0f, -2500.0f, -500.0f);
+	CustomBoundaryMax = FVector(2500.0f, 2500.0f, 500.0f);
+	
+	bDrawDebugBoundaries = true; // Enable debug visualization
 
 	// Initialize timers
 	WanderTimer = 0.0f;
@@ -738,9 +743,36 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 	// Update direction change timer
 	WanderTimer += DeltaTime;
 	DirectionChangeTimer += DeltaTime;
+	
+	// Handle boundary turning behavior
+	if (bTurningAroundFromBoundary) {
+		BoundaryTurnTimer += DeltaTime;
+		if (BoundaryTurnTimer >= 1.0f) { // Turn for 1 second
+			bTurningAroundFromBoundary = false;
+			BoundaryTurnTimer = 0.0f;
+		}
+	}
 
-	// Simplified direction changes - no boundary restrictions
-	if (WanderTimer >= FMath::RandRange(2.0f, 5.0f)) {
+	// Check if we're near a boundary and need to turn around
+	if (bHasValidBoundaries && IsNearBoundary(CurrentLocation, BoundaryBuffer) && !bTurningAroundFromBoundary) {
+		// Get direction to turn away from boundary
+		FVector CurrentDirection = FVector(
+			FMath::Cos(FMath::DegreesToRadians(WanderDirection)),
+			FMath::Sin(FMath::DegreesToRadians(WanderDirection)),
+			0.0f
+		);
+		
+		FVector AvoidanceDirection = GetBoundaryAvoidanceDirection(CurrentLocation, CurrentDirection);
+		WanderDirection = FMath::RadiansToDegrees(FMath::Atan2(AvoidanceDirection.Y, AvoidanceDirection.X));
+		
+		bTurningAroundFromBoundary = true;
+		BoundaryTurnTimer = 0.0f;
+		WanderTimer = 0.0f; // Reset wander timer
+		
+		UE_LOG(LogTemp, Warning, TEXT("Girl %s turning away from boundary"), *GetName());
+	}
+	// Normal direction changes when not avoiding boundaries
+	else if (!bTurningAroundFromBoundary && WanderTimer >= FMath::RandRange(3.0f, 7.0f)) {
 		WanderDirection = FMath::RandRange(0.0f, 360.0f);
 		WanderTimer = 0.0f;
 	}
@@ -752,13 +784,31 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 		0.0f
 	);
 
-	// Calculate new position - no boundary clamping
+	// Calculate new position
 	FVector NewLocation = CurrentLocation + (DirectionVector * MovementSpeed * DeltaTime);
 
-	// Move freely without boundary restrictions
+	// Clamp to boundaries if enabled
+	if (bHasValidBoundaries) {
+		NewLocation = ClampToBoundaries(NewLocation);
+		
+		// If the clamped position is different, we hit a boundary - force direction change
+		if (!NewLocation.Equals(CurrentLocation + (DirectionVector * MovementSpeed * DeltaTime), 10.0f)) {
+			WanderDirection = FMath::RandRange(0.0f, 360.0f);
+			bTurningAroundFromBoundary = true;
+			BoundaryTurnTimer = 0.0f;
+		}
+	}
+
+	// Apply movement
 	SetActorLocation(NewLocation);
+	LastValidPosition = NewLocation;
 
 	// Rotate to face movement direction
 	FRotator NewRotation = DirectionVector.Rotation();
 	SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
+
+	// Draw debug boundaries if enabled
+	if (bDrawDebugBoundaries) {
+		DrawDebugBoundaries();
+	}
 }
