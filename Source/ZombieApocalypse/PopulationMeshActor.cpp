@@ -43,6 +43,13 @@ APopulationMeshActor::APopulationMeshActor() {
 	BittenTimestamp = -1.0f;
 	bCanBeBitten = true;
 
+	// NEW: Zombie Biting Behavior Defaults
+	BiteRange = 100.0f;
+	BiteCooldown = 2.0f;
+	bEnableBiting = true;
+	BiteSearchRadius = 300.0f;
+	LastBiteTime = 0.0f;
+
 	// Hides Static Mesh if Skeletal Mesh is used
 	StaticMeshComponent->SetVisibility(!bUseSkeletalMesh);
 	SkeletalMeshComponent->SetVisibility(bUseSkeletalMesh);
@@ -260,9 +267,19 @@ void APopulationMeshActor::Tick(float DeltaTime)
 		PreviousPopulationType = PopulationType;
 	}
 
-	// Handle movement behavior - removed target dependency for free movement
+	// NEW: Handle zombie biting behavior
+	if (PopulationType == EPopulationType::Zombie && bEnableBiting) {
+		HandleZombieBitingBehavior(DeltaTime);
+	}
+
+	// Handle movement behavior
 	if (bShouldWander) {
-		GirlsHandleWanderingMovement(DeltaTime);
+		if (PopulationType == EPopulationType::Zombie && CurrentTarget && IsValid(CurrentTarget)) {
+			HandleZombieTargetedMovement(DeltaTime);
+		}
+		else {
+			GirlsHandleWanderingMovement(DeltaTime);
+		}
 	}
 }
 
@@ -401,7 +418,7 @@ void APopulationMeshActor::TransformToZombie() {
 	PopulationType = EPopulationType::Zombie;
 	UpdateMeshBasedOnPopulation();
 
-	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor % s has been transformed into a zombie"), *GetName());
+	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been transformed into a zombie"), *GetName());
 }
 
 bool APopulationMeshActor::IsValidBiteTarget() const {
@@ -420,6 +437,142 @@ void APopulationMeshActor::CheckForTransformation() {
 
 		TransformToZombie();
 	}
+}
+
+// NEW: Zombie biting behavior methods
+void APopulationMeshActor::HandleZombieBitingBehavior(float DeltaTime) {
+
+	if (!SimulationController || PopulationType != EPopulationType::Zombie)
+		return;
+
+	LastBiteTime += DeltaTime;
+
+	if (LastBiteTime < BiteCooldown)
+		return;
+
+	// Find a target if we don't have one
+	if (!CurrentTarget || !IsValid(CurrentTarget) || !CurrentTarget->IsValidBiteTarget()) {
+		CurrentTarget = FindNearestBiteTarget();
+	}
+}
+
+void APopulationMeshActor::HandleZombieTargetedMovement(float DeltaTime) {
+
+	if (!CurrentTarget || PopulationType != EPopulationType::Zombie) 
+		return;
+
+	FVector TargetLocation = CurrentTarget->GetActorLocation();
+	FVector MyLocation = GetActorLocation();
+	float DistanceToTarget = FVector::Dist2D(MyLocation, TargetLocation);
+
+	// Move toward target if not in bite range
+	if (DistanceToTarget > BiteRange) {
+		FVector DirectionToTarget = (TargetLocation - MyLocation).GetSafeNormal();
+		FVector NewLocation = MyLocation + (DirectionToTarget * MovementSpeed * DeltaTime);
+
+		SetActorLocation(NewLocation);
+
+		// Face the target
+		FRotator NewRotation = DirectionToTarget.Rotation();
+		SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
+	}
+	else {
+		// We're in range, attempt to bite
+		TryToBiteNearbyTargets();
+	}
+}
+
+void APopulationMeshActor::TryToBiteNearbyTargets() {
+
+	if (!SimulationController || PopulationType != EPopulationType::Zombie)
+		return;
+
+	// Check cooldown
+	if (LastBiteTime < BiteCooldown)
+		return;
+
+	// Find all potential targets in bite range
+	UWorld* World = GetWorld();
+	if (!World)
+		return;
+
+	FVector MyLocation = GetActorLocation();
+
+	for (TActorIterator<APopulationMeshActor> ActorIterator(World); ActorIterator; ++ActorIterator) {
+
+		APopulationMeshActor* PotentialTarget = *ActorIterator;
+
+		if (!PotentialTarget || PotentialTarget == this)
+			continue;
+
+		if (!CanBiteTarget(PotentialTarget))
+			continue;
+
+		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
+
+		if (Distance <= BiteRange) {
+
+			// Get current simulation time
+			float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+
+			// Bite the target
+			PotentialTarget->GetBitten(CurrentSimulationTime);
+
+			// Reset bite timer
+			LastBiteTime = 0.0f;
+
+			// Clear current target so we can find a new one
+			CurrentTarget = nullptr;
+
+			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s bit %s at simulation time %f"),
+				*GetName(), *PotentialTarget->GetName(), CurrentSimulationTime);
+
+			// Only bite one target per attempt
+			break;
+		}
+	}
+}
+
+APopulationMeshActor* APopulationMeshActor::FindNearestBiteTarget() {
+
+	if (PopulationType != EPopulationType::Zombie)
+		return nullptr;
+
+	UWorld* World = GetWorld();
+	if (!World)
+		return nullptr;
+
+	FVector MyLocation = GetActorLocation();
+	APopulationMeshActor* NearestTarget = nullptr;
+	float NearestDistance = BiteSearchRadius;
+
+	for (TActorIterator<APopulationMeshActor> ActorIterator(World); ActorIterator; ++ActorIterator) {
+
+		APopulationMeshActor* PotentialTarget = *ActorIterator;
+
+		if (!PotentialTarget || PotentialTarget == this)
+			continue;
+
+		if (!CanBiteTarget(PotentialTarget))
+			continue;
+
+		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
+
+		if (Distance < NearestDistance) {
+			NearestDistance = Distance;
+			NearestTarget = PotentialTarget;
+		}
+	}
+
+	return NearestTarget;
+}
+
+bool APopulationMeshActor::CanBiteTarget(APopulationMeshActor* Target) const {
+
+	if (!Target || PopulationType != EPopulationType::Zombie)
+		return false;
+
+	return Target->IsValidBiteTarget();
 }
 
 void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {

@@ -24,19 +24,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bite Behavior")
-	float BiteRange = 100.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bite Behavior")
-	float BiteCooldown = 2.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bite Behavior")
-	bool bEnableBiting = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bite Behavior")
-	float BiteSearchRadius = 300.0f;
-
 	// Visual effects
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
 	bool bEnableZombieEffects = true;
@@ -44,47 +31,35 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
 	FLinearColor ZombieTint = FLinearColor(0.8f, 1.0f, 0.8f, 1.0f);
 
-	UFUNCTION(BlueprintCallable, Category = "Biting")
-	void TryToBiteNearbyTargets();
+	// NEW: Teleportation settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	float TeleportInterval = 1.0f; // Teleport every second
 
-	UFUNCTION(BlueprintCallable, Category = "Biting")
-	APopulationMeshActor* FindNearestBiteTarget();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	float TeleportRange = 150.0f; // How close to teleport near the target
 
-	UFUNCTION(BlueprintCallable, Category = "Biting")
-	bool CanBiteTarget(APopulationMeshActor* Target) const;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	bool bEnableTeleportation = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
+	bool bEnableDebugTeleport = true;
 
 private:
 	void UpdateZombieMesh();
 	float GetZombiePopulation() const;
 	void SetupZombieComponents();
-	void HandleBitingBehavior(float DeltaTime);
-	void HandleWanderingMovement(float DeltaTime);
-	void HandleTargetedMovement(float DeltaTime);
-
-	// Movement boundary helpers
-	void CalculateWorldBoundaries();
-	FVector GetBoundaryAvoidanceDirection(const FVector& CurrentLocation, const FVector& CurrentDirection);
-	bool IsNearBoundary(const FVector& Location, float Buffer = 0.0f) const;
-	void DrawDebugBoundaries() const;
+	
+	// NEW: Teleportation methods (replacing movement)
+	void HandleZombieTeleportation(float DeltaTime);
+	APopulationMeshActor* FindRandomBiteTarget();
+	void TeleportToTarget(APopulationMeshActor* Target);
+	void AttemptBiteAfterTeleport(APopulationMeshActor* Target);
 
 	// Zombie-specific tracking
 	float PreviousZombieCount = 0.0f;
-	FVector InitialLocation;
-	float WanderTimer = 0.0f;
-	float WanderDirection = 0.0f;
-
+	
+	// NEW: Teleportation tracking (replacing movement variables)
+	float TeleportTimer = 0.0f;
 	float LastBiteTime = 0.0f;
-	APopulationMeshActor* CurrentTarget = nullptr;
-
-	// Movement boundaries
-	FVector WorldBoundaryMin;
-	FVector WorldBoundaryMax;
-	bool bHasValidBoundaries = false;
-
-	// Movement state
-	FVector LastValidPosition;
-	float DirectionChangeTimer = 0.0f;
-	bool bTurningAroundFromBoundary = false;
-	float BoundaryTurnTimer = 0.0f;
 };
 

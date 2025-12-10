@@ -98,6 +98,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
 	float WanderRadius = 500.0f;
 
+	// NEW: Zombie Biting Behavior Settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	float BiteRange = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	float BiteCooldown = 2.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	bool bEnableBiting = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	float BiteSearchRadius = 300.0f;
+
 	// Movement boundary settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement Boundaries")
 	bool bUseCustomBoundaries = false;
@@ -139,6 +152,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
 	bool IsValidBiteTarget() const;
 
+	// NEW: Zombie Biting Functions
+	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
+	void TryToBiteNearbyTargets();
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
+	APopulationMeshActor* FindNearestBiteTarget();
+
+	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
+	bool CanBiteTarget(APopulationMeshActor* Target) const;
+
 	// Movement boundary functions
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	FVector GetMovementBoundaries(bool& bOutMinBoundary, FVector& OutMin, FVector& OutMax);
@@ -157,6 +180,10 @@ private:
 	void FindSimulationController();
 	void GirlsHandleWanderingMovement(float DeltaTime);
 
+	// NEW: Zombie biting behavior
+	void HandleZombieBitingBehavior(float DeltaTime);
+	void HandleZombieTargetedMovement(float DeltaTime);
+
 	// Movement boundary helpers
 	void CalculateWorldBoundaries();
 	FVector GetBoundaryAvoidanceDirection(const FVector& CurrentLocation, const FVector& CurrentDirection);
@@ -168,6 +195,9 @@ private:
 	float WanderDirection = 0.0f;
 
 	APopulationMeshActor* CurrentTarget = nullptr;
+
+	// NEW: Zombie biting tracking
+	float LastBiteTime = 0.0f;
 
 	// Movement boundaries
 	FVector WorldBoundaryMin;
