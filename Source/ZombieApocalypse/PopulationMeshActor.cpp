@@ -812,3 +812,8 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 		DrawDebugBoundaries();
 	}
 }
+
+void APopulationMeshActor::OnDeath() const {
+
+
+}

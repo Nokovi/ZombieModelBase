@@ -196,7 +196,7 @@ public:
 	FVector ClampToBoundaries(const FVector& Location) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
-	void OnDeath();
+	void OnDeath() const;
 
 private:
 
