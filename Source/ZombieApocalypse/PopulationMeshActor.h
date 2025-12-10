@@ -195,6 +195,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	FVector ClampToBoundaries(const FVector& Location) const;
 
+	UFUNCTION(BlueprintCallable, Category = "Health")
+	void OnDeath();
+
 private:
 
 	void UpdateMeshBasedOnPopulation();
