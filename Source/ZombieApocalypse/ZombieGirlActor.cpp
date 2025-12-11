@@ -24,14 +24,14 @@ AZombieGirlActor::AZombieGirlActor() {
 	ZombieTint = FLinearColor(0.8f, 1.0f, 0.8f, 1.0f);
 
 	// NEW: Teleportation defaults (replacing movement)
-	TeleportInterval = 1.0f; // Teleport every second
+	TeleportInterval = 5.0f; // Teleport (Specify how many seconds -- Default 5 seconds)
 	TeleportRange = 150.0f;
 	bEnableTeleportation = true;
 	bEnableDebugTeleport = true;
 
 	// Biting Behavior Defaults
 	BiteRange = 100.0f;
-	BiteCooldown = 0.5f; // Faster biting since we teleport
+	BiteCooldown = 5.0f; // Faster biting since we teleport
 	bEnableBiting = true;
 
 	// Disable movement - zombies only teleport now
@@ -39,7 +39,7 @@ AZombieGirlActor::AZombieGirlActor() {
 	MovementSpeed = 0.0f;
 
 	// Initialize timers
-	TeleportTimer = 0.0f;
+	TeleportTimer = 5.0f;
 	LastBiteTime = 0.0f;
 }
 
@@ -69,7 +69,7 @@ void AZombieGirlActor::Tick(float DeltaTime) {
 			PreviousZombieCount = CurrentZombieCount;
 		}
 
-		// NEW: Handle teleportation behavior (replaces movement)
+		// Handle teleportation behavior
 		if (bEnableTeleportation) {
 
 			HandleZombieTeleportation(DeltaTime);
@@ -86,7 +86,7 @@ void AZombieGirlActor::HandleZombieTeleportation(float DeltaTime) {
 	TeleportTimer += DeltaTime;
 	LastBiteTime += DeltaTime;
 
-	// Check if it's time to teleport (every second)
+	// Check if it's time to teleport (Specify timestep -- Default 1 second)
 	if (TeleportTimer >= TeleportInterval) {
 
 		// Find a random girl to teleport to

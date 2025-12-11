@@ -47,7 +47,7 @@ private:
 	float PreviousZombieCount = 0.0f;
 	
 	// Teleportation tracking
-	float TeleportTimer = 0.0f;
-	float LastBiteTime = 0.0f;
+	float TeleportTimer = 5.0f;
+	float LastBiteTime = 5.0f;
 };
 

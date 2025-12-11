@@ -45,13 +45,13 @@ APopulationMeshActor::APopulationMeshActor() {
 
 	// Zombie Biting Behavior Defaults
 	BiteRange = 100.0f;
-	BiteCooldown = 2.0f;
+	BiteCooldown = 5.0f;
 	bEnableBiting = true;
 	BiteSearchRadius = 300.0f;
 	LastBiteTime = 0.0f;
 
 	// Zombie Teleportation Defaults
-	TeleportInterval = 1.0f;
+	TeleportInterval = 5.0f;
 	TeleportRange = 150.0f;
 	bEnableTeleportation = true;
 	bEnableDebugTeleport = false;

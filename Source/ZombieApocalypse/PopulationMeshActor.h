@@ -113,7 +113,7 @@ public:
 
 	// Zombie Teleportation Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
-	float TeleportInterval = 1.0f; // Teleport every second
+	float TeleportInterval = 5.0f; // Teleport every second
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
 	float TeleportRange = 150.0f; // How close to teleport near the target

@@ -25,7 +25,7 @@ public:
 	FBiteRecord() {
 
 		BittenActor = nullptr;
-		BiteTime = 0.0f;
+		BiteTime = 5.0f;
 	}
 
 	FBiteRecord(APopulationMeshActor* Actor, float Time) {
