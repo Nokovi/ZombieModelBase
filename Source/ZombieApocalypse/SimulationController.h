@@ -43,6 +43,13 @@ public:
 	void ReadDataFromTableToVectors();
 
 
+	//Win or loss trigger functions;
+	UFUNCTION(BlueprintImplementableEvent, Category = "EndGameEvents")
+	void Lose();
+	UFUNCTION(BlueprintImplementableEvent, Category = "EndGameEvents")
+	void Win();
+
+
 	// Unreal Lookup table for population density effect
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Simulation Variables")
 	class UDataTable* PopulationDensityEffectTable{ nullptr };

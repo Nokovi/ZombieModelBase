@@ -47,11 +47,11 @@ public:
 
 	
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	float GetHealthPoints();
 	float GetHealthPoints_Implementation();
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void SetHealthPoints(float HP);
 	void SetHealthPoints_Implementation(float HP);
 };

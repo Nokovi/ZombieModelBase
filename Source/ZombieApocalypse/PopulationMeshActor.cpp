@@ -462,6 +462,7 @@ void APopulationMeshActor::GetBitten(float CurrentSimulationTime) {
 
 	UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor: Actor %s has been bitten at simulation time %f "),
 		* GetName(), CurrentSimulationTime);
+
 }
 
 bool APopulationMeshActor::ShouldTransformToZombie(float CurrentSimulationTime) const {
@@ -895,6 +896,16 @@ void APopulationMeshActor::OnDeath() const {
 		}
 		if (PopulationType == EPopulationType::Bitten) {
 			SimController->Bitten--;
+			
+			float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+			int ThisDaysLeft = CurrentSimulationTime - BittenTimestamp;
+
+			for (auto& b : SimController->conveyor) {
+				if (static_cast<int>(b.remainingDays) == static_cast<int>(ThisDaysLeft)) {
+					b.amountOfPeople--;
+				}
+			}
+
 		}
 	}
 
