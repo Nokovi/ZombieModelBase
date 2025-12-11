@@ -2,6 +2,7 @@
 
 
 #include "HealthInterface.h"
+#include "../SimulationController.h"
 #include "../PopulationMeshActor.h"
 
 

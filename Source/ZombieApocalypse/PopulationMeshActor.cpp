@@ -9,6 +9,7 @@
 #include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "SimulationController.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Animation/AnimBlueprint.h"
@@ -16,7 +17,7 @@
 // Sets default values
 APopulationMeshActor::APopulationMeshActor() {
 
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Create the Root Component
@@ -69,11 +70,11 @@ APopulationMeshActor::APopulationMeshActor() {
 	// Boundary restrictions to keep girls within level
 	BoundaryBuffer = 200.0f; // Distance from edge before turning around
 	bUseCustomBoundaries = true; // Custom boundaries
-	
+
 	// Set reasonable default boundaries (adjust these values for your level)
 	CustomBoundaryMin = FVector(-2500.0f, -2500.0f, -500.0f);
 	CustomBoundaryMax = FVector(2500.0f, 2500.0f, 500.0f);
-	
+
 	bDrawDebugBoundaries = true; // Enable debug visualization
 
 	// Initialize timers
@@ -82,6 +83,14 @@ APopulationMeshActor::APopulationMeshActor() {
 	DirectionChangeTimer = 0.0f;
 	bTurningAroundFromBoundary = false;
 	BoundaryTurnTimer = 0.0f;
+
+
+	//Create weapon collision component
+	WeaponCollider = CreateDefaultSubobject<UCapsuleComponent> (TEXT("Weapon Collider"));
+	WeaponCollider->SetCapsuleSize(50.f, 180.f, true);
+	WeaponCollider->SetupAttachment(RootComponent);
+	WeaponCollider->SetGenerateOverlapEvents(true);
+
 }
 
 // Called when the game starts or when spawned
@@ -869,6 +878,26 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 }
 
 void APopulationMeshActor::OnDeath() const {
+	TArray < AActor* > mSimControllers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASimulationController::StaticClass(), mSimControllers);
 
-	// A function declaration for reference used in HealthInterface.
+	
+
+	AActor* mSimController = mSimControllers[0];
+
+	ASimulationController* SimController = Cast <ASimulationController>(mSimController);
+	if (SimController != NULL) {
+		if (PopulationType == EPopulationType::Zombie) {
+			SimController->Zombies--;
+		}
+		if (PopulationType == EPopulationType::Susceptible) {
+			SimController->Susceptible--;
+		}
+		if (PopulationType == EPopulationType::Bitten) {
+			SimController->Bitten--;
+		}
+	}
+
+	
+
 }
