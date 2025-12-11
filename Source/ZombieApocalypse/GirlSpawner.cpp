@@ -1,6 +1,3 @@
-// Copyright University of Inland Norway
-
-
 #include "GirlSpawner.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -69,17 +66,20 @@ void AGirlSpawner::SpawnGirls() {
 	UWorld* World = GetWorld();
 
 	if (!World) {
+
 		UE_LOG(LogTemp, Error, TEXT("GirlSpawner: No valid world found!"));
 		return;
 	}
 
 	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Warning, TEXT("GirlSpawner: Starting to spawn %d girls"), NumberToSpawn);
 	}
 
 	// Spawn the specified number of girls
 	int32 SuccessfulSpawns = 0;
 	for (int32 i = 0; i < NumberToSpawn; i++) {
+
 		FVector SpawnLocation = CalculateSpawnLocation(i);
 		FRotator SpawnRotation = GetActorRotation();
 
@@ -103,10 +103,13 @@ void AGirlSpawner::SpawnGirls() {
 			SuccessfulSpawns++;
 
 			if (bEnableDebugLogging && (i < 5 || i % 20 == 0)) {
+
 				UE_LOG(LogTemp, Log, TEXT("GirlSpawner: Successfully spawned girl %d at location %s"), i, *SpawnLocation.ToString());
 			}
 		}
+
 		else {
+
 			UE_LOG(LogTemp, Error, TEXT("GirlSpawner: Failed to spawn girl at index %d"), i);
 		}
 	}
@@ -124,31 +127,36 @@ void AGirlSpawner::ConfigureSpawnedGirl(APopulationMeshActor* SpawnedGirl) {
 	// Assign the mesh assets
 	SpawnedGirl->SusceptibleMesh = GirlMesh;
 	if (GirlAnimBP) {
+
 		SpawnedGirl->SusceptibleAnimBP = GirlAnimBP;
 	}
 
-	// Force it to use skeletal mesh
+	// Make it use skeletal mesh
 	SpawnedGirl->bUseSkeletalMesh = true;
 
 	// Disable automatic simulation controller finding to prevent warnings
 	SpawnedGirl->bAutoFindSimulationController = false;
 
-	// Force mesh setup
+	// Mesh setup
 	if (SpawnedGirl->SkeletalMeshComponent && GirlMesh) {
+
 		SpawnedGirl->SkeletalMeshComponent->SetSkeletalMesh(GirlMesh);
 		SpawnedGirl->SkeletalMeshComponent->SetVisibility(true);
 
 		if (GirlAnimBP && GirlAnimBP->GetAnimBlueprintGeneratedClass()) {
+
 			SpawnedGirl->SkeletalMeshComponent->SetAnimInstanceClass(GirlAnimBP->GetAnimBlueprintGeneratedClass());
 		}
 	}
 
 	// Hide static mesh component
 	if (SpawnedGirl->StaticMeshComponent) {
+
 		SpawnedGirl->StaticMeshComponent->SetVisibility(false);
 	}
 
 	if (bEnableDebugLogging) {
+
 		UE_LOG(LogTemp, Log, TEXT("GirlSpawner: Configured girl with mesh: %s"), GirlMesh ? *GirlMesh->GetName() : TEXT("None"));
 	}
 }

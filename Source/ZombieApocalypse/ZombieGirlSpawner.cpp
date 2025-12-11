@@ -37,14 +37,14 @@ void AZombieGirlSpawner::BeginPlay() {
 }
 
 // Called every frame
-void AZombieGirlSpawner::Tick(float DeltaTime)
-{
+void AZombieGirlSpawner::Tick(float DeltaTime) {
+
 	Super::Tick(DeltaTime);
 
 }
 
-void AZombieGirlSpawner::SpawnZombies()
-{
+void AZombieGirlSpawner::SpawnZombies() {
+
 	if (bEnableDebugLogging) {
 
 		UE_LOG(LogTemp, Warning, TEXT("ZombieGirlSpawner: SpawnZombies() called"));
@@ -135,13 +135,13 @@ void AZombieGirlSpawner::ConfigureSpawnedZombie(AZombieGirlActor* SpawnedZombie)
 		SpawnedZombie->ZombieAnimBP = ZombieAnimBP;
 	}
 
-	// Force it to use skeletal mesh
+	// Make it use skeletal mesh
 	SpawnedZombie->bUseSkeletalMesh = true;
 
 	// Disable automatic simulation controller finding to prevent warnings
 	SpawnedZombie->bAutoFindSimulationController = false;
 
-	// Force mesh setup
+	// Mesh setup
 	if (SpawnedZombie->SkeletalMeshComponent && ZombieMesh) {
 
 		SpawnedZombie->SkeletalMeshComponent->SetSkeletalMesh(ZombieMesh);

@@ -71,6 +71,7 @@ void AZombieGirlActor::Tick(float DeltaTime) {
 
 		// NEW: Handle teleportation behavior (replaces movement)
 		if (bEnableTeleportation) {
+
 			HandleZombieTeleportation(DeltaTime);
 		}
 	}
@@ -100,12 +101,16 @@ void AZombieGirlActor::HandleZombieTeleportation(float DeltaTime) {
 			AttemptBiteAfterTeleport(RandomTarget);
 			
 			if (bEnableDebugTeleport) {
+
 				UE_LOG(LogTemp, Warning, TEXT("ZombieGirlActor: %s teleported to bite target %s"), 
 					*GetName(), *RandomTarget->GetName());
 			}
 		}
+
 		else {
+
 			if (bEnableDebugTeleport) {
+
 				UE_LOG(LogTemp, Warning, TEXT("ZombieGirlActor: %s could not find any bite targets"), *GetName());
 			}
 		}
@@ -133,12 +138,14 @@ APopulationMeshActor* AZombieGirlActor::FindRandomBiteTarget() {
 
 		// Check if this is a valid bite target (susceptible girls)
 		if (PotentialTarget->IsValidBiteTarget()) {
+
 			ValidTargets.Add(PotentialTarget);
 		}
 	}
 
 	// Return a random target from valid targets
 	if (ValidTargets.Num() > 0) {
+
 		int32 RandomIndex = FMath::RandRange(0, ValidTargets.Num() - 1);
 		return ValidTargets[RandomIndex];
 	}

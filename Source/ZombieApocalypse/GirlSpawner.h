@@ -11,8 +11,8 @@
 #include "GirlSpawner.generated.h"
 
 UCLASS()
-class ZOMBIEAPOCALYPSE_API AGirlSpawner : public AActor
-{
+class ZOMBIEAPOCALYPSE_API AGirlSpawner : public AActor {
+
 	GENERATED_BODY()
 	
 public:	

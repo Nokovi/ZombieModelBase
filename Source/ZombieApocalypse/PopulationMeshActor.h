@@ -21,8 +21,8 @@ enum class EPopulationType : uint8 {
 };
 
 UCLASS()
-class ZOMBIEAPOCALYPSE_API APopulationMeshActor : public AActor
-{
+class ZOMBIEAPOCALYPSE_API APopulationMeshActor : public AActor {
+
 	GENERATED_BODY()
 	
 public:	
@@ -98,7 +98,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
 	float WanderRadius = 500.0f;
 
-	// NEW: Zombie Biting Behavior Settings
+	// Zombie Biting Behavior Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
 	float BiteRange = 100.0f;
 
@@ -111,7 +111,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
 	float BiteSearchRadius = 300.0f;
 
-	// NEW: Zombie Teleportation Settings
+	// Zombie Teleportation Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
 	float TeleportInterval = 1.0f; // Teleport every second
 
@@ -165,7 +165,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
 	bool IsValidBiteTarget() const;
 
-	// NEW: Zombie Biting Functions
+	// Zombie Biting Functions
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	void TryToBiteNearbyTargets();
 
@@ -175,7 +175,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	bool CanBiteTarget(APopulationMeshActor* Target) const;
 
-	// NEW: Zombie Teleportation Functions
+	// Zombie Teleportation Functions
 	UFUNCTION(BlueprintCallable, Category = "Zombie Teleportation")
 	APopulationMeshActor* FindRandomBiteTarget();
 
@@ -206,11 +206,11 @@ private:
 	void FindSimulationController();
 	void GirlsHandleWanderingMovement(float DeltaTime);
 
-	// NEW: Zombie biting behavior
+	// Zombie biting behavior
 	void HandleZombieBitingBehavior(float DeltaTime);
 	void HandleZombieTargetedMovement(float DeltaTime);
 
-	// NEW: Zombie teleportation behavior
+	// Zombie teleportation behavior
 	void HandleZombieTeleportation(float DeltaTime);
 
 	// Movement boundary helpers
@@ -225,10 +225,10 @@ private:
 
 	APopulationMeshActor* CurrentTarget = nullptr;
 
-	// NEW: Zombie biting tracking
+	// Zombie biting tracking
 	float LastBiteTime = 0.0f;
 
-	// NEW: Zombie teleportation tracking
+	// Zombie teleportation tracking
 	float TeleportTimer = 0.0f;
 
 	// Movement boundaries

@@ -37,7 +37,7 @@ private:
 	float GetZombiePopulation() const;
 	void SetupZombieComponents();
 	
-	// NEW: Teleportation methods (replacing movement)
+	// Teleportation methods
 	void HandleZombieTeleportation(float DeltaTime);
 	APopulationMeshActor* FindRandomBiteTarget();
 	void TeleportToTarget(APopulationMeshActor* Target);
@@ -46,7 +46,7 @@ private:
 	// Zombie-specific tracking
 	float PreviousZombieCount = 0.0f;
 	
-	// NEW: Teleportation tracking (replacing movement variables)
+	// Teleportation tracking
 	float TeleportTimer = 0.0f;
 	float LastBiteTime = 0.0f;
 };

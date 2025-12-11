@@ -43,14 +43,14 @@ APopulationMeshActor::APopulationMeshActor() {
 	BittenTimestamp = -1.0f;
 	bCanBeBitten = true;
 
-	// NEW: Zombie Biting Behavior Defaults
+	// Zombie Biting Behavior Defaults
 	BiteRange = 100.0f;
 	BiteCooldown = 2.0f;
 	bEnableBiting = true;
 	BiteSearchRadius = 300.0f;
 	LastBiteTime = 0.0f;
 
-	// NEW: Zombie Teleportation Defaults
+	// Zombie Teleportation Defaults
 	TeleportInterval = 1.0f;
 	TeleportRange = 150.0f;
 	bEnableTeleportation = true;
@@ -64,11 +64,11 @@ APopulationMeshActor::APopulationMeshActor() {
 	MovementSpeed = 250.0f;
 	AttackRange = 75.0f;
 	bShouldWander = true;
-	WanderRadius = 2000.0f; // Reduced from 50000.0f to reasonable size
+	WanderRadius = 2000.0f;
 
-	// ENABLE boundary restrictions to keep girls within level
+	// Boundary restrictions to keep girls within level
 	BoundaryBuffer = 200.0f; // Distance from edge before turning around
-	bUseCustomBoundaries = true; // Enable custom boundaries
+	bUseCustomBoundaries = true; // Custom boundaries
 	
 	// Set reasonable default boundaries (adjust these values for your level)
 	CustomBoundaryMin = FVector(-2500.0f, -2500.0f, -500.0f);
@@ -85,8 +85,8 @@ APopulationMeshActor::APopulationMeshActor() {
 }
 
 // Called when the game starts or when spawned
-void APopulationMeshActor::BeginPlay()
-{
+void APopulationMeshActor::BeginPlay() {
+
 	Super::BeginPlay();
 
 	// AutoFind Simulation Controller if Enabled
@@ -110,6 +110,7 @@ void APopulationMeshActor::BeginPlay()
 void APopulationMeshActor::CalculateWorldBoundaries() {
 
 	if (bUseCustomBoundaries) {
+
 		WorldBoundaryMin = CustomBoundaryMin;
 		WorldBoundaryMax = CustomBoundaryMax;
 		bHasValidBoundaries = true;
@@ -119,6 +120,7 @@ void APopulationMeshActor::CalculateWorldBoundaries() {
 	// Try to automatically detect world boundaries
 	UWorld* World = GetWorld();
 	if (!World) {
+
 		bHasValidBoundaries = false;
 		return;
 	}
@@ -130,22 +132,27 @@ void APopulationMeshActor::CalculateWorldBoundaries() {
 	// Try to find static mesh actors that could represent level boundaries
 	bool bFoundAnyGeometry = false;
 	for (TActorIterator<AActor> ActorIterator(World); ActorIterator; ++ActorIterator) {
+
 		AActor* Actor = *ActorIterator;
 		if (!Actor || Actor == this) continue;
 
 		// Look for actors with static mesh components (potential level geometry)
 		UStaticMeshComponent* MeshComp = Actor->FindComponentByClass<UStaticMeshComponent>();
 		if (MeshComp && MeshComp->GetStaticMesh()) {
+
 			FVector ActorLocation = Actor->GetActorLocation();
 			FVector ActorBounds = Actor->GetComponentsBoundingBox().GetSize();
 
 			if (!bFoundAnyGeometry) {
+
 				// First piece of geometry found, initialize boundaries
 				WorldBoundaryMin = ActorLocation - ActorBounds * 0.5f;
 				WorldBoundaryMax = ActorLocation + ActorBounds * 0.5f;
 				bFoundAnyGeometry = true;
 			}
+
 			else {
+
 				// Expand boundaries to include this geometry
 				FVector GeomMin = ActorLocation - ActorBounds * 0.5f;
 				FVector GeomMax = ActorLocation + ActorBounds * 0.5f;
@@ -163,6 +170,7 @@ void APopulationMeshActor::CalculateWorldBoundaries() {
 
 	// If no geometry found, use a reasonable default around spawn point
 	if (!bFoundAnyGeometry) {
+
 		FVector SpawnCenter = GetActorLocation();
 		float DefaultSize = 5000.0f;
 		WorldBoundaryMin = SpawnCenter - FVector(DefaultSize, DefaultSize, 1000.0f);
@@ -181,20 +189,28 @@ FVector APopulationMeshActor::GetBoundaryAvoidanceDirection(const FVector& Curre
 
 	// Check each boundary and add avoidance force
 	if (CurrentLocation.X <= WorldBoundaryMin.X + BoundaryBuffer) {
+
 		AvoidanceDirection.X += 1.0f; // Move away from left boundary
 	}
+
 	if (CurrentLocation.X >= WorldBoundaryMax.X - BoundaryBuffer) {
+
 		AvoidanceDirection.X -= 1.0f; // Move away from right boundary
 	}
+
 	if (CurrentLocation.Y <= WorldBoundaryMin.Y + BoundaryBuffer) {
+
 		AvoidanceDirection.Y += 1.0f; // Move away from front boundary
 	}
+
 	if (CurrentLocation.Y >= WorldBoundaryMax.Y - BoundaryBuffer) {
+
 		AvoidanceDirection.Y -= 1.0f; // Move away from back boundary
 	}
 
 	// If no specific avoidance needed, turn around
 	if (AvoidanceDirection.IsNearlyZero()) {
+
 		AvoidanceDirection = -CurrentDirection;
 	}
 
@@ -258,34 +274,41 @@ FVector APopulationMeshActor::GetMovementBoundaries(bool& bOutMinBoundary, FVect
 }
 
 // Called every frame
-void APopulationMeshActor::Tick(float DeltaTime)
-{
+void APopulationMeshActor::Tick(float DeltaTime) {
+
 	Super::Tick(DeltaTime);
 
 	// Updates if there is a Simulation Controller
 	if (!SimulationController) {
+
 		return;
 	}
 
 	if (bIsBitten && PopulationType != EPopulationType::Zombie) {
+
 		CheckForTransformation();
 	}
 
 	// Checks if Population values/type has changed
 	float CurrentPopulationValue = GetCurrentPopulationValue();
 	if (CurrentPopulationValue != PreviousPopulationValue || PopulationType != PreviousPopulationType) {
+
 		UpdateMeshBasedOnPopulation();
 		PreviousPopulationValue = CurrentPopulationValue;
 		PreviousPopulationType = PopulationType;
 	}
 
-	// NEW: Handle zombie behavior - choose between teleportation or traditional movement/biting
+	// Handle zombie behavior - choose between teleportation or traditional movement/biting
 	if (PopulationType == EPopulationType::Zombie) {
+
 		if (bEnableTeleportation) {
+
 			// Use teleportation behavior like ZombieGirlActor
 			HandleZombieTeleportation(DeltaTime);
 		}
+
 		else if (bEnableBiting) {
+
 			// Use traditional zombie biting behavior
 			HandleZombieBitingBehavior(DeltaTime);
 		}
@@ -293,12 +316,17 @@ void APopulationMeshActor::Tick(float DeltaTime)
 
 	// Handle movement behavior for non-zombie types or zombies without teleportation
 	if (bShouldWander && PopulationType != EPopulationType::Zombie) {
+
 		GirlsHandleWanderingMovement(DeltaTime);
 	}
+
 	else if (PopulationType == EPopulationType::Zombie && !bEnableTeleportation && CurrentTarget && IsValid(CurrentTarget)) {
+
 		HandleZombieTargetedMovement(DeltaTime);
 	}
+
 	else if (PopulationType == EPopulationType::Zombie && !bEnableTeleportation && bShouldWander) {
+
 		GirlsHandleWanderingMovement(DeltaTime);
 	}
 }
@@ -438,11 +466,12 @@ void APopulationMeshActor::TransformToZombie() {
 	PopulationType = EPopulationType::Zombie;
 	UpdateMeshBasedOnPopulation();
 
-	// NEW: Reset teleportation timer when transforming to zombie
+	// Reset teleportation timer when transforming to zombie
 	TeleportTimer = 0.0f;
 
-	// NEW: Disable regular wandering for zombies, they use teleportation instead
+	// Disable regular wandering for zombies, they use teleportation instead
 	if (bEnableTeleportation) {
+
 		bShouldWander = false;
 	}
 
@@ -467,7 +496,7 @@ void APopulationMeshActor::CheckForTransformation() {
 	}
 }
 
-// NEW: Zombie teleportation behavior methods (copied from ZombieGirlActor)
+// Zombie teleportation behavior methods (Same code from ZombieGirlActor)
 void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
@@ -492,12 +521,16 @@ void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
 			AttemptBiteAfterTeleport(RandomTarget);
 			
 			if (bEnableDebugTeleport) {
+
 				UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s teleported to bite target %s"), 
 					*GetName(), *RandomTarget->GetName());
 			}
 		}
+
 		else {
+
 			if (bEnableDebugTeleport) {
+
 				UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s could not find any bite targets"), *GetName());
 			}
 		}
@@ -525,12 +558,14 @@ APopulationMeshActor* APopulationMeshActor::FindRandomBiteTarget() {
 
 		// Check if this is a valid bite target (susceptible girls)
 		if (PotentialTarget->IsValidBiteTarget()) {
+
 			ValidTargets.Add(PotentialTarget);
 		}
 	}
 
 	// Return a random target from valid targets
 	if (ValidTargets.Num() > 0) {
+
 		int32 RandomIndex = FMath::RandRange(0, ValidTargets.Num() - 1);
 		return ValidTargets[RandomIndex];
 	}
@@ -594,13 +629,14 @@ void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target
 		LastBiteTime = 0.0f;
 
 		if (bEnableDebugTeleport) {
+
 			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s successfully bit %s after teleportation at simulation time %f"),
 				*GetName(), *Target->GetName(), CurrentSimulationTime);
 		}
 	}
 }
 
-// Original zombie biting behavior methods (for when teleportation is disabled)
+// Original zombie biting behavior methods (for when teleportation is disabled -- But then will not work together with simulation timestep)
 void APopulationMeshActor::HandleZombieBitingBehavior(float DeltaTime) {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
@@ -613,6 +649,7 @@ void APopulationMeshActor::HandleZombieBitingBehavior(float DeltaTime) {
 
 	// Find a target if we don't have one
 	if (!CurrentTarget || !IsValid(CurrentTarget) || !CurrentTarget->IsValidBiteTarget()) {
+
 		CurrentTarget = FindNearestBiteTarget();
 	}
 }
@@ -628,6 +665,7 @@ void APopulationMeshActor::HandleZombieTargetedMovement(float DeltaTime) {
 
 	// Move toward target if not in bite range
 	if (DistanceToTarget > BiteRange) {
+
 		FVector DirectionToTarget = (TargetLocation - MyLocation).GetSafeNormal();
 		FVector NewLocation = MyLocation + (DirectionToTarget * MovementSpeed * DeltaTime);
 
@@ -637,7 +675,9 @@ void APopulationMeshActor::HandleZombieTargetedMovement(float DeltaTime) {
 		FRotator NewRotation = DirectionToTarget.Rotation();
 		SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
 	}
+
 	else {
+
 		// We're in range, attempt to bite
 		TryToBiteNearbyTargets();
 	}
@@ -720,6 +760,7 @@ APopulationMeshActor* APopulationMeshActor::FindNearestBiteTarget() {
 		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
 
 		if (Distance < NearestDistance) {
+
 			NearestDistance = Distance;
 			NearestTarget = PotentialTarget;
 		}
@@ -746,8 +787,10 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 	
 	// Handle boundary turning behavior
 	if (bTurningAroundFromBoundary) {
+
 		BoundaryTurnTimer += DeltaTime;
-		if (BoundaryTurnTimer >= 1.0f) { // Turn for 1 second
+		if (BoundaryTurnTimer >= 1.0f) {
+			// Turn for 1 second
 			bTurningAroundFromBoundary = false;
 			BoundaryTurnTimer = 0.0f;
 		}
@@ -755,6 +798,7 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 
 	// Check if we're near a boundary and need to turn around
 	if (bHasValidBoundaries && IsNearBoundary(CurrentLocation, BoundaryBuffer) && !bTurningAroundFromBoundary) {
+
 		// Get direction to turn away from boundary
 		FVector CurrentDirection = FVector(
 			FMath::Cos(FMath::DegreesToRadians(WanderDirection)),
@@ -771,8 +815,10 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 		
 		UE_LOG(LogTemp, Warning, TEXT("Girl %s turning away from boundary"), *GetName());
 	}
+
 	// Normal direction changes when not avoiding boundaries
 	else if (!bTurningAroundFromBoundary && WanderTimer >= FMath::RandRange(3.0f, 7.0f)) {
+
 		WanderDirection = FMath::RandRange(0.0f, 360.0f);
 		WanderTimer = 0.0f;
 	}
@@ -789,10 +835,12 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 
 	// Clamp to boundaries if enabled
 	if (bHasValidBoundaries) {
+
 		NewLocation = ClampToBoundaries(NewLocation);
 		
 		// If the clamped position is different, we hit a boundary - force direction change
 		if (!NewLocation.Equals(CurrentLocation + (DirectionVector * MovementSpeed * DeltaTime), 10.0f)) {
+
 			WanderDirection = FMath::RandRange(0.0f, 360.0f);
 			bTurningAroundFromBoundary = true;
 			BoundaryTurnTimer = 0.0f;
@@ -809,11 +857,12 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 
 	// Draw debug boundaries if enabled
 	if (bDrawDebugBoundaries) {
+
 		DrawDebugBoundaries();
 	}
 }
 
 void APopulationMeshActor::OnDeath() const {
 
-
+	// A function declaration for reference used in HealthInterface.
 }

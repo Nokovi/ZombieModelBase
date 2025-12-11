@@ -170,28 +170,28 @@ void ABiteManager::CleanupInvalidBites() {
 	}
 }
 
-void ABiteManager::TransformOldestScheduledActors(int32 ActorsToTransform, int32 CurrentDay)
-{
-    if (ActorsToTransform <= 0)
-    {
+void ABiteManager::TransformOldestScheduledActors(int32 ActorsToTransform, int32 CurrentDay) {
+
+    if (ActorsToTransform <= 0) {
+
         return;
     }
 
     // Find all actors scheduled for transformation on the current day
     TArray<int32> CandidateIndices;
-    for (int32 i = 0; i < ActiveBites.Num(); i++)
-    {
+    for (int32 i = 0; i < ActiveBites.Num(); i++) {
+
         if (ActiveBites[i].ScheduledTransformationDay == CurrentDay &&
-            ActiveBites[i].BittenActor.IsValid())
-        {
+            ActiveBites[i].BittenActor.IsValid()) {
+
             CandidateIndices.Add(i);
         }
     }
 
-    if (CandidateIndices.Num() == 0)
-    {
-        if (bEnableDebugLogging)
-        {
+    if (CandidateIndices.Num() == 0) {
+
+        if (bEnableDebugLogging) {
+
             UE_LOG(LogTemp, Warning, TEXT("BiteManager: No valid actors scheduled for transformation on day %d"), CurrentDay);
         }
         return;
@@ -207,18 +207,18 @@ void ABiteManager::TransformOldestScheduledActors(int32 ActorsToTransform, int32
     int32 ActualTransformCount = FMath::Min(ActorsToTransform, CandidateIndices.Num());
     TArray<int32> IndicesToRemove;
 
-    for (int32 i = 0; i < ActualTransformCount; i++)
-    {
+    for (int32 i = 0; i < ActualTransformCount; i++) {
+
         int32 BiteIndex = CandidateIndices[i];
         APopulationMeshActor* ActorToTransform = ActiveBites[BiteIndex].BittenActor.Get();
 
-        if (ActorToTransform)
-        {
+        if (ActorToTransform) {
+
             // Transform the actor to zombie
             ActorToTransform->TransformToZombie();
 
-            if (bEnableDebugLogging)
-            {
+            if (bEnableDebugLogging) {
+
                 UE_LOG(LogTemp, Log, TEXT("BiteManager: Transformed actor to zombie on day %d (bite time: %.2f)"),
                     CurrentDay, ActiveBites[BiteIndex].BiteTime);
             }
@@ -230,51 +230,51 @@ void ABiteManager::TransformOldestScheduledActors(int32 ActorsToTransform, int32
 
     // Remove transformed bite records (remove in reverse order to maintain indices)
     IndicesToRemove.Sort([](const int32& A, const int32& B) { return A > B; });
-    for (int32 IndexToRemove : IndicesToRemove)
-    {
+    for (int32 IndexToRemove : IndicesToRemove) {
+
         ActiveBites.RemoveAt(IndexToRemove);
     }
 
-    if (bEnableDebugLogging)
-    {
+    if (bEnableDebugLogging) {
+
         UE_LOG(LogTemp, Log, TEXT("BiteManager: Transformed %d actors on day %d. %d active bites remaining"),
             ActualTransformCount, CurrentDay, ActiveBites.Num());
     }
 }
 
-void ABiteManager::CheckForIndividualTransformations(int32 CurrentDay)
-{
-    if (ActiveBites.Num() == 0)
-    {
+void ABiteManager::CheckForIndividualTransformations(int32 CurrentDay) {
+
+    if (ActiveBites.Num() == 0) {
+
         return;
     }
 
     TArray<int32> IndicesToRemove;
     
     // Check each bite record for transformation eligibility
-    for (int32 i = ActiveBites.Num() - 1; i >= 0; --i)
-    {
+    for (int32 i = ActiveBites.Num() - 1; i >= 0; --i) {
+
         FBiteRecord& BiteRecord = ActiveBites[i];
         
         // Check if actor is still valid
-        if (!BiteRecord.BittenActor.IsValid())
-        {
+        if (!BiteRecord.BittenActor.IsValid()) {
+
             IndicesToRemove.Add(i);
             continue;
         }
         
         // Check if transformation day has arrived
-        if (BiteRecord.ScheduledTransformationDay <= CurrentDay)
-        {
+        if (BiteRecord.ScheduledTransformationDay <= CurrentDay) {
+
             APopulationMeshActor* ActorToTransform = BiteRecord.BittenActor.Get();
             
-            if (ActorToTransform)
-            {
+            if (ActorToTransform) {
+
                 // Transform the actor to zombie state
                 ActorToTransform->TransformToZombie();  // Changed from SetActorState
                 
-                if (bEnableDebugLogging)
-                {
+                if (bEnableDebugLogging) {
+
                     UE_LOG(LogTemp, Log, TEXT("BiteManager: Individual transformation - Actor transformed to zombie on day %d (scheduled day: %d)"), 
                            CurrentDay, BiteRecord.ScheduledTransformationDay);
                 }
@@ -286,13 +286,13 @@ void ABiteManager::CheckForIndividualTransformations(int32 CurrentDay)
     }
     
     // Remove transformed or invalid bite records
-    for (int32 Index : IndicesToRemove)
-    {
+    for (int32 Index : IndicesToRemove) {
+
         ActiveBites.RemoveAt(Index);
     }
     
-    if (bEnableDebugLogging && IndicesToRemove.Num() > 0)
-    {
+    if (bEnableDebugLogging && IndicesToRemove.Num() > 0) {
+
         UE_LOG(LogTemp, Log, TEXT("BiteManager: Processed %d individual transformations on day %d. Active bites remaining: %d"), 
                IndicesToRemove.Num(), CurrentDay, ActiveBites.Num());
     }
