@@ -63,6 +63,7 @@ void ASimulationController::RunSimulationStep()
         b.remainingDays -= 1.f;
     }
     
+
     std::vector<ConveyorBatch> next_conveyor;
     float raw_outflow_people = 0.f;
     next_conveyor.reserve(conveyor.size());
@@ -91,6 +92,16 @@ void ASimulationController::RunSimulationStep()
     Susceptible = FMath::Max(0.f, Susceptible - getting_bitten);
     Zombies = FMath::Max(0.f, Zombies + becoming_infected);
     Bitten = conveyor_content();
+
+
+    //Check if win or lose.
+
+    if (Susceptible <= 0) {
+        Lose();
+    }
+    if (Zombies <= 0 || TimeStepsFinished > 180 ) {
+        Win();
+    }
 }
 
 float ASimulationController::conveyor_content()
