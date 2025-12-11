@@ -9,6 +9,7 @@
 #include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "SimulationController.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Animation/AnimBlueprint.h"
@@ -871,6 +872,26 @@ void APopulationMeshActor::GirlsHandleWanderingMovement(float DeltaTime) {
 }
 
 void APopulationMeshActor::OnDeath() const {
+	TArray < AActor* > mSimControllers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASimulationController::StaticClass(), mSimControllers);
 
-	// A function declaration for reference used in HealthInterface.
+	
+
+	AActor* mSimController = mSimControllers[0];
+
+	ASimulationController* SimController = Cast <ASimulationController>(mSimController);
+	if (SimController != NULL) {
+		if (PopulationType == EPopulationType::Zombie) {
+			SimController->Zombies--;
+		}
+		if (PopulationType == EPopulationType::Susceptible) {
+			SimController->Susceptible--;
+		}
+		if (PopulationType == EPopulationType::Bitten) {
+			SimController->Bitten--;
+		}
+	}
+
+	
+
 }
