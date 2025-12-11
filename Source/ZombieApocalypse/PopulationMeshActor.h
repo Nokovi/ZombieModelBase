@@ -6,8 +6,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "Animation/AnimBlueprint.h"
 #include "Engine/SkeletalMesh.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Interfaces/HealthInterface.h"
 #include "SimulationController.h"
 #include "PopulationMeshActor.generated.h"
 
@@ -21,11 +23,11 @@ enum class EPopulationType : uint8 {
 };
 
 UCLASS()
-class ZOMBIEAPOCALYPSE_API APopulationMeshActor : public AActor {
+class ZOMBIEAPOCALYPSE_API APopulationMeshActor : public AActor, public IHealthInterface {
 
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	APopulationMeshActor();
 
@@ -33,7 +35,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -246,5 +248,11 @@ private:
 	float PreviousPopulationValue;
 	EPopulationType PreviousPopulationType;
 
+
+public:
+	UPROPERTY(BlueprintReadWrite, Category = "Collision")
+	UCapsuleComponent* WeaponCollider;
+
+private:
 	void CheckForTransformation();
 };
