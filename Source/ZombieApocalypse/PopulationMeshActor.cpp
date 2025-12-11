@@ -45,13 +45,13 @@ APopulationMeshActor::APopulationMeshActor() {
 
 	// Zombie Biting Behavior Defaults
 	BiteRange = 100.0f;
-	BiteCooldown = 2.0f;
+	BiteCooldown = 5.0f;
 	bEnableBiting = true;
 	BiteSearchRadius = 300.0f;
 	LastBiteTime = 0.0f;
 
 	// Zombie Teleportation Defaults
-	TeleportInterval = 1.0f;
+	TeleportInterval = 5.0f;
 	TeleportRange = 150.0f;
 	bEnableTeleportation = true;
 	bEnableDebugTeleport = false;
@@ -298,6 +298,12 @@ void APopulationMeshActor::Tick(float DeltaTime) {
 		PreviousPopulationType = PopulationType;
 	}
 
+	// Bitten Characters remain stationary until they transform
+	if (PopulationType == EPopulationType::Bitten) {
+		// Bitten characters don't move - they remain stationary until transformation
+		return;
+	}
+
 	// Handle zombie behavior - choose between teleportation or traditional movement/biting
 	if (PopulationType == EPopulationType::Zombie) {
 
@@ -314,8 +320,8 @@ void APopulationMeshActor::Tick(float DeltaTime) {
 		}
 	}
 
-	// Handle movement behavior for non-zombie types or zombies without teleportation
-	if (bShouldWander && PopulationType != EPopulationType::Zombie) {
+	// Handle movement behavior for non-zombie types (only susceptible now, since bitten are excluded above)
+	if (bShouldWander && PopulationType == EPopulationType::Susceptible) {
 
 		GirlsHandleWanderingMovement(DeltaTime);
 	}
