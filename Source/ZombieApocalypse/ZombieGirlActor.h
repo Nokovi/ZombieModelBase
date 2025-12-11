@@ -32,6 +32,18 @@ public:
 	FLinearColor ZombieTint = FLinearColor(0.8f, 1.0f, 0.8f, 1.0f);
 
 
+public:
+	// Add boundary support (inherited from PopulationMeshActor)
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	bool ZombieIsWithinBoundaries(const FVector& Location) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement") 
+	FVector ZombieClampToBoundaries(const FVector& Location) const;
+
+protected:
+	// Add boundary checking flag
+	bool bHasValidBoundaries = false;
+
 private:
 	void UpdateZombieMesh();
 	float GetZombiePopulation() const;

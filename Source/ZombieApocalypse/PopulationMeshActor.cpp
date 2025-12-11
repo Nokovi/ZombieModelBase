@@ -609,6 +609,36 @@ void APopulationMeshActor::TeleportToTarget(APopulationMeshActor* Target) {
 	
 	FVector TeleportLocation = TargetLocation + (OffsetDirection * RandomDistance);
 	
+	// **NEW: Clamp teleport location to boundaries**
+	if (bHasValidBoundaries) {
+		TeleportLocation = ClampToBoundaries(TeleportLocation);
+		
+		// If the clamped location is too far from target, try alternative positions
+		if (FVector::Dist2D(TeleportLocation, TargetLocation) > TeleportRange) {
+			// Try multiple angles to find a valid position within boundaries
+			bool bFoundValidPosition = false;
+			for (int32 Attempts = 0; Attempts < 8 && !bFoundValidPosition; Attempts++) {
+				float TestAngle = (360.0f / 8.0f) * Attempts;
+				FVector TestDirection = FVector(
+					FMath::Cos(FMath::DegreesToRadians(TestAngle)),
+					FMath::Sin(FMath::DegreesToRadians(TestAngle)),
+					0.0f
+				);
+				FVector TestLocation = TargetLocation + (TestDirection * BiteRange);
+				
+				if (IsWithinBoundaries(TestLocation)) {
+					TeleportLocation = TestLocation;
+					bFoundValidPosition = true;
+				}
+			}
+			
+			// If no valid position found, teleport to target's location (within boundaries)
+			if (!bFoundValidPosition) {
+				TeleportLocation = ClampToBoundaries(TargetLocation);
+			}
+		}
+	}
+	
 	// Teleport to the calculated position
 	SetActorLocation(TeleportLocation);
 	
@@ -616,6 +646,11 @@ void APopulationMeshActor::TeleportToTarget(APopulationMeshActor* Target) {
 	FVector DirectionToTarget = (TargetLocation - TeleportLocation).GetSafeNormal();
 	FRotator NewRotation = DirectionToTarget.Rotation();
 	SetActorRotation(FRotator(0.0f, NewRotation.Yaw, 0.0f));
+	
+	if (bEnableDebugTeleport) {
+		UE_LOG(LogTemp, Log, TEXT("PopulationMeshActor Zombie: %s teleported to %s (clamped to boundaries)"), 
+			*GetName(), *TeleportLocation.ToString());
+	}
 }
 
 void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target) {
