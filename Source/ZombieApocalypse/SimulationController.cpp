@@ -1,5 +1,3 @@
-// Copyright University of Inland Norway
-
 #include "SimulationController.h"
 #include  <cmath>
 
@@ -96,7 +94,7 @@ void ASimulationController::RunSimulationStep()
 
     //Check if win or lose.
 
-    if (Susceptible <= 0) {
+    if (Susceptible <= 45) {
         Lose();
     }
     if (Zombies <= 0 || TimeStepsFinished > 180 ) {

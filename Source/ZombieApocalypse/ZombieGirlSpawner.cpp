@@ -1,6 +1,3 @@
-// Copyright University of Inland Norway
-
-
 #include "ZombieGirlSpawner.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"

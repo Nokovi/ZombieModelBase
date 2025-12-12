@@ -177,7 +177,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
 	bool IsValidBiteTarget() const;
 
-	// Zombie Biting Functions - Modified for guaranteed bites
+	// Zombie Biting Functions
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	void TryToBiteNearbyTargets();
 
@@ -187,7 +187,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	bool CanBiteTarget(APopulationMeshActor* Target) const;
 
-	// NEW: Static function to reset global bite tracking
+	// Static function to reset global bite tracking
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	static void ResetGlobalBiteTracking();
 

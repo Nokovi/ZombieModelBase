@@ -1,6 +1,3 @@
-// Copyright University of Inland Norway
-
-
 #include "SimulationHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "SimulationController.h"

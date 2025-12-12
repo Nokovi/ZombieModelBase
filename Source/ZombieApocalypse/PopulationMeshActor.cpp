@@ -1,5 +1,3 @@
-// Copyright University of Inland Norway
-
 #include "PopulationMeshActor.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -19,7 +17,7 @@ bool APopulationMeshActor::bGlobalBiteInProgress = false;
 // Sets default values
 APopulationMeshActor::APopulationMeshActor() {
 
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame. turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Create the Root Component
@@ -510,12 +508,12 @@ void APopulationMeshActor::CheckForTransformation() {
 	}
 }
 
-// NEW: Static function to reset global bite tracking
+// Static function to reset global bite tracking
 void APopulationMeshActor::ResetGlobalBiteTracking() {
 	bGlobalBiteInProgress = false;
 }
 
-// Modified zombie teleportation behavior to guarantee bites and limit to one at a time
+// zombie teleportation that does a bite afterwards
 void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
@@ -548,7 +546,7 @@ void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
 			// Teleport to the target
 			TeleportToTarget(RandomTarget);
 			
-			// Attempt to bite after teleporting (now guaranteed if enabled)
+			// Attempt to bite after teleporting (guaranteed if enabled)
 			AttemptBiteAfterTeleport(RandomTarget);
 			
 			// Reset global bite tracking after bite attempt
@@ -673,7 +671,7 @@ void APopulationMeshActor::TeleportToTarget(APopulationMeshActor* Target) {
 	}
 }
 
-// Modified to guarantee bites when enabled
+// bites after teleport
 void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target) {
 
 	if (!Target || !SimulationController)
@@ -701,7 +699,7 @@ void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target
 		return;
 	}
 
-	// Original behavior with checks (if guaranteed bites are disabled)
+	// Original behavior with checks
 	// Check bite cooldown
 	if (LastBiteTime < BiteCooldown)
 		return;
@@ -760,7 +758,7 @@ void APopulationMeshActor::HandleZombieTargetedMovement(float DeltaTime) {
 	}
 }
 
-// Modified to support guaranteed bites and one-at-a-time enforcement
+// modified a bit so it does not try to bite targets that are too close together that results in multi bitten girls and will break the simulation step
 void APopulationMeshActor::TryToBiteNearbyTargets() {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
@@ -770,7 +768,7 @@ void APopulationMeshActor::TryToBiteNearbyTargets() {
 	if (bOnlyOneBiteAtATime && bGlobalBiteInProgress)
 		return;
 
-	// Check cooldown (skip if guaranteed bites enabled)
+	// Check cooldown
 	if (!bGuaranteeBites && LastBiteTime < BiteCooldown)
 		return;
 
@@ -793,11 +791,11 @@ void APopulationMeshActor::TryToBiteNearbyTargets() {
 
 		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
 
-		// Check distance (skip if guaranteed bites enabled)
+		// Check distance
 		if (!bGuaranteeBites && Distance > BiteRange)
 			continue;
 
-		// Mark that a bite is in progress (for one-at-a-time enforcement)
+		// Mark that a bite is in progress
 		if (bOnlyOneBiteAtATime) {
 			bGlobalBiteInProgress = true;
 		}

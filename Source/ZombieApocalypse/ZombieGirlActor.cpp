@@ -1,5 +1,3 @@
-// Copyright University of Inland Norway
-
 #include "ZombieGirlActor.h"
 #include "Engine/World.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -23,7 +21,7 @@ AZombieGirlActor::AZombieGirlActor() {
 	bEnableZombieEffects = true;
 	ZombieTint = FLinearColor(0.8f, 1.0f, 0.8f, 1.0f);
 
-	// NEW: Teleportation defaults (replacing movement)
+	// Teleportation defaults
 	TeleportInterval = 5.0f; // Teleport (Specify how many seconds -- Default 5 seconds)
 	TeleportRange = 150.0f;
 	bEnableTeleportation = true;
@@ -127,7 +125,7 @@ float AZombieGirlActor::GetZombiePopulation() const {
 	return SimulationController->Zombies;
 }
 
-// Add these methods to inherit boundary functionality
+// inherits boundary functionality from PopulationMeshActor
 bool AZombieGirlActor::ZombieIsWithinBoundaries(const FVector& Location) const {
 	// Delegate to parent class boundary checking
 	return Super::IsWithinBoundaries(Location);
