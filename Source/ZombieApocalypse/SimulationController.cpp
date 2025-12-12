@@ -160,4 +160,3 @@ void ASimulationController::ReadDataFromTableToVectors()
        }
     }
 }
- 
