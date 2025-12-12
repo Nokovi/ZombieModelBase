@@ -1,6 +1,5 @@
 // Copyright University of Inland Norway
 
-
 #include "PopulationMeshActor.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -13,6 +12,9 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Animation/AnimBlueprint.h"
+
+// Initialize static variable
+bool APopulationMeshActor::bGlobalBiteInProgress = false;
 
 // Sets default values
 APopulationMeshActor::APopulationMeshActor() {
@@ -51,6 +53,10 @@ APopulationMeshActor::APopulationMeshActor() {
 	BiteSearchRadius = 300.0f;
 	LastBiteTime = 0.0f;
 
+	// NEW: Guaranteed bite settings
+	bGuaranteeBites = true;
+	bOnlyOneBiteAtATime = true;
+
 	// Zombie Teleportation Defaults
 	TeleportInterval = 5.0f;
 	TeleportRange = 150.0f;
@@ -84,13 +90,11 @@ APopulationMeshActor::APopulationMeshActor() {
 	bTurningAroundFromBoundary = false;
 	BoundaryTurnTimer = 0.0f;
 
-
 	//Create weapon collision component
 	WeaponCollider = CreateDefaultSubobject<UCapsuleComponent> (TEXT("Weapon Collider"));
 	WeaponCollider->SetCapsuleSize(50.f, 180.f, true);
 	WeaponCollider->SetupAttachment(RootComponent);
 	WeaponCollider->SetGenerateOverlapEvents(true);
-
 }
 
 // Called when the game starts or when spawned
@@ -321,12 +325,6 @@ void APopulationMeshActor::Tick(float DeltaTime) {
 			// Use teleportation behavior like ZombieGirlActor
 			HandleZombieTeleportation(DeltaTime);
 		}
-
-		else if (bEnableBiting) {
-
-			// Use traditional zombie biting behavior
-			HandleZombieBitingBehavior(DeltaTime);
-		}
 	}
 
 	// Handle movement behavior for non-zombie types (only susceptible now, since bitten are excluded above)
@@ -512,7 +510,12 @@ void APopulationMeshActor::CheckForTransformation() {
 	}
 }
 
-// Zombie teleportation behavior methods (Same code from ZombieGirlActor)
+// NEW: Static function to reset global bite tracking
+void APopulationMeshActor::ResetGlobalBiteTracking() {
+	bGlobalBiteInProgress = false;
+}
+
+// Modified zombie teleportation behavior to guarantee bites and limit to one at a time
 void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
@@ -525,16 +528,33 @@ void APopulationMeshActor::HandleZombieTeleportation(float DeltaTime) {
 	// Check if it's time to teleport
 	if (TeleportTimer >= TeleportInterval) {
 
+		// Check if we should enforce "one bite at a time"
+		if (bOnlyOneBiteAtATime && bGlobalBiteInProgress) {
+			// Another zombie is already biting, skip this cycle
+			TeleportTimer = 0.0f;
+			return;
+		}
+
 		// Find a random girl to teleport to
 		APopulationMeshActor* RandomTarget = FindRandomBiteTarget();
 		
 		if (RandomTarget) {
 			
+			// Mark that a bite is in progress (for one-at-a-time enforcement)
+			if (bOnlyOneBiteAtATime) {
+				bGlobalBiteInProgress = true;
+			}
+			
 			// Teleport to the target
 			TeleportToTarget(RandomTarget);
 			
-			// Attempt to bite after teleporting
+			// Attempt to bite after teleporting (now guaranteed if enabled)
 			AttemptBiteAfterTeleport(RandomTarget);
+			
+			// Reset global bite tracking after bite attempt
+			if (bOnlyOneBiteAtATime) {
+				bGlobalBiteInProgress = false;
+			}
 			
 			if (bEnableDebugTeleport) {
 
@@ -653,11 +673,35 @@ void APopulationMeshActor::TeleportToTarget(APopulationMeshActor* Target) {
 	}
 }
 
+// Modified to guarantee bites when enabled
 void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target) {
 
 	if (!Target || !SimulationController)
 		return;
 
+	// If guaranteed bites are enabled, skip cooldown and distance checks
+	if (bGuaranteeBites) {
+		// Check if target is still valid
+		if (!Target->IsValidBiteTarget())
+			return;
+
+		// Get current simulation time
+		float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+
+		// Guaranteed bite - no distance or cooldown checks
+		Target->GetBitten(CurrentSimulationTime);
+
+		// Reset bite timer
+		LastBiteTime = 0.0f;
+
+		if (bEnableDebugTeleport) {
+			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s GUARANTEED bite on %s after teleportation at simulation time %f"),
+				*GetName(), *Target->GetName(), CurrentSimulationTime);
+		}
+		return;
+	}
+
+	// Original behavior with checks (if guaranteed bites are disabled)
 	// Check bite cooldown
 	if (LastBiteTime < BiteCooldown)
 		return;
@@ -684,24 +728,6 @@ void APopulationMeshActor::AttemptBiteAfterTeleport(APopulationMeshActor* Target
 			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s successfully bit %s after teleportation at simulation time %f"),
 				*GetName(), *Target->GetName(), CurrentSimulationTime);
 		}
-	}
-}
-
-// Original zombie biting behavior methods (for when teleportation is disabled -- But then will not work together with simulation timestep)
-void APopulationMeshActor::HandleZombieBitingBehavior(float DeltaTime) {
-
-	if (!SimulationController || PopulationType != EPopulationType::Zombie)
-		return;
-
-	LastBiteTime += DeltaTime;
-
-	if (LastBiteTime < BiteCooldown)
-		return;
-
-	// Find a target if we don't have one
-	if (!CurrentTarget || !IsValid(CurrentTarget) || !CurrentTarget->IsValidBiteTarget()) {
-
-		CurrentTarget = FindNearestBiteTarget();
 	}
 }
 
@@ -734,13 +760,18 @@ void APopulationMeshActor::HandleZombieTargetedMovement(float DeltaTime) {
 	}
 }
 
+// Modified to support guaranteed bites and one-at-a-time enforcement
 void APopulationMeshActor::TryToBiteNearbyTargets() {
 
 	if (!SimulationController || PopulationType != EPopulationType::Zombie)
 		return;
 
-	// Check cooldown
-	if (LastBiteTime < BiteCooldown)
+	// Check if we should enforce "one bite at a time"
+	if (bOnlyOneBiteAtATime && bGlobalBiteInProgress)
+		return;
+
+	// Check cooldown (skip if guaranteed bites enabled)
+	if (!bGuaranteeBites && LastBiteTime < BiteCooldown)
 		return;
 
 	// Find all potential targets in bite range
@@ -762,26 +793,37 @@ void APopulationMeshActor::TryToBiteNearbyTargets() {
 
 		float Distance = FVector::Dist2D(MyLocation, PotentialTarget->GetActorLocation());
 
-		if (Distance <= BiteRange) {
+		// Check distance (skip if guaranteed bites enabled)
+		if (!bGuaranteeBites && Distance > BiteRange)
+			continue;
 
-			// Get current simulation time
-			float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
-
-			// Bite the target
-			PotentialTarget->GetBitten(CurrentSimulationTime);
-
-			// Reset bite timer
-			LastBiteTime = 0.0f;
-
-			// Clear current target so we can find a new one
-			CurrentTarget = nullptr;
-
-			UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s bit %s at simulation time %f"),
-				*GetName(), *PotentialTarget->GetName(), CurrentSimulationTime);
-
-			// Only bite one target per attempt
-			break;
+		// Mark that a bite is in progress (for one-at-a-time enforcement)
+		if (bOnlyOneBiteAtATime) {
+			bGlobalBiteInProgress = true;
 		}
+
+		// Get current simulation time
+		float CurrentSimulationTime = static_cast<float>(SimulationController->TimeStepsFinished);
+
+		// Bite the target
+		PotentialTarget->GetBitten(CurrentSimulationTime);
+
+		// Reset bite timer
+		LastBiteTime = 0.0f;
+
+		// Clear current target so we can find a new one
+		CurrentTarget = nullptr;
+
+		UE_LOG(LogTemp, Warning, TEXT("PopulationMeshActor Zombie: %s %s bit %s at simulation time %f"),
+			*GetName(), bGuaranteeBites ? TEXT("GUARANTEED") : TEXT("successfully"), *PotentialTarget->GetName(), CurrentSimulationTime);
+
+		// Reset global bite tracking after bite
+		if (bOnlyOneBiteAtATime) {
+			bGlobalBiteInProgress = false;
+		}
+
+		// Only bite one target per attempt
+		break;
 	}
 }
 

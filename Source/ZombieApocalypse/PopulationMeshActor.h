@@ -113,6 +113,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
 	float BiteSearchRadius = 300.0f;
 
+	// NEW: Global bite tracking for "one at a time" guarantee
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	bool bGuaranteeBites = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Behavior")
+	bool bOnlyOneBiteAtATime = true;
+
+	// Static variable to track if a bite is happening this frame
+	static bool bGlobalBiteInProgress;
+
 	// Zombie Teleportation Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Zombie Teleportation")
 	float TeleportInterval = 5.0f; // Teleport every second
@@ -167,7 +177,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bite Management System")
 	bool IsValidBiteTarget() const;
 
-	// Zombie Biting Functions
+	// Zombie Biting Functions - Modified for guaranteed bites
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	void TryToBiteNearbyTargets();
 
@@ -176,6 +186,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
 	bool CanBiteTarget(APopulationMeshActor* Target) const;
+
+	// NEW: Static function to reset global bite tracking
+	UFUNCTION(BlueprintCallable, Category = "Zombie Behavior")
+	static void ResetGlobalBiteTracking();
 
 	// Zombie Teleportation Functions
 	UFUNCTION(BlueprintCallable, Category = "Zombie Teleportation")
@@ -209,7 +223,6 @@ private:
 	void GirlsHandleWanderingMovement(float DeltaTime);
 
 	// Zombie biting behavior
-	void HandleZombieBitingBehavior(float DeltaTime);
 	void HandleZombieTargetedMovement(float DeltaTime);
 
 	// Zombie teleportation behavior
